@@ -1,0 +1,24 @@
+{
+  "expo": {
+    "name": "OnlySwapX-Mobile",
+    "slug": "OnlySwapX-Mobile",
+    "scheme": "onlyswapx",
+    "android": {
+      "permissions": [
+        "ACCESS_FINE_LOCATION",
+        "ACCESS_COARSE_LOCATION",
+        "CAMERA",
+        "RECORD_AUDIO"
+      ]
+    },
+    "plugins": [
+      "expo-router",
+      [
+        "expo-location",
+        {
+          "locationAlwaysAndWhenInUsePermission": "Permite a OnlySwapX encontrar intercambios cercanos."
+        }
+      ]
+    ]
+  }
+}
