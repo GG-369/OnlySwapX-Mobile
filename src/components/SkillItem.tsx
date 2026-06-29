@@ -5,6 +5,18 @@ import { Badge, Button, Card, colors } from './ui';
 import { SkillDetailResponse, SkillSummaryResponse } from '@/types';
 import { formatDistance } from '@/utils/format';
 
+const skillLevelLabel = (level?: string) => {
+  const labels: Record<string, string> = {
+    BEGINNER: 'Básico',
+    BASICO: 'Básico',
+    INTERMEDIATE: 'Intermedio',
+    INTERMEDIO: 'Intermedio',
+    ADVANCED: 'Avanzado',
+    AVANZADO: 'Avanzado',
+  };
+  return labels[level || ''] || level;
+};
+
 interface Props {
   skill: SkillDetailResponse | SkillSummaryResponse;
   ownerName?: string;
@@ -38,7 +50,7 @@ export function SkillItem({ skill, ownerName, rating, distanceMeters, campusName
 
         <View style={styles.metaRow}>
           {skill.category ? <Badge>{skill.category}</Badge> : null}
-          {skill.level ? <Badge>{skill.level}</Badge> : null}
+          {skill.level ? <Badge>{skillLevelLabel(skill.level)}</Badge> : null}
         </View>
 
         <View style={styles.sensorRow}>

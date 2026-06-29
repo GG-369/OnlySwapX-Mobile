@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { Alert, RefreshControl, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Alert, Modal, RefreshControl, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { useRouter } from 'expo-router';
 import { ArrowLeftRight, CalendarPlus, MessageCircle, XCircle } from 'lucide-react-native';
 import { useAuth } from '@/context/AuthContext';
@@ -11,6 +11,17 @@ import { formatDate, readableError, statusLabel } from '@/utils/format';
 
 const FILTERS = ['ALL', 'PENDING', 'ACCEPTED', 'REJECTED', 'ENDED'];
 
+const toDateInput = (date: Date) => {
+  const pad = (value: number) => String(value).padStart(2, '0');
+  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
+};
+
+const sanitizeDateTime = (value: string) => {
+  const trimmed = value.trim();
+  if (!trimmed) return '';
+  return trimmed.length === 16 ? `${trimmed}:00` : trimmed;
+};
+
 export default function ExchangesScreen() {
   const router = useRouter();
   const { user, refreshUser } = useAuth();
@@ -18,6 +29,12 @@ export default function ExchangesScreen() {
   const [filter, setFilter] = useState('ALL');
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [scheduleExchange, setScheduleExchange] = useState<ExchangeSummaryResponse | null>(null);
+  const [topic, setTopic] = useState('');
+  const [scheduledAt, setScheduledAt] = useState('');
+  const [creditsAmount, setCreditsAmount] = useState('1');
+  const [durationMinutes, setDurationMinutes] = useState('45');
+  const [creatingSession, setCreatingSession] = useState(false);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -84,19 +101,54 @@ export default function ExchangesScreen() {
     ]);
   };
 
-  const schedule = async (exchange: ExchangeSummaryResponse) => {
+  const openSchedule = (exchange: ExchangeSummaryResponse) => {
+    const tomorrow = new Date(Date.now() + 24 * 60 * 60 * 1000);
+    setScheduleExchange(exchange);
+    setTopic(exchange.skillName || `Intercambio #${exchange.id}`);
+    setScheduledAt(toDateInput(tomorrow));
+    setCreditsAmount('1');
+    setDurationMinutes('45');
+  };
+
+  const createSession = async () => {
+    if (!scheduleExchange || creatingSession) return;
+    const credits = Number(creditsAmount);
+    const duration = Number(durationMinutes);
+    const when = sanitizeDateTime(scheduledAt);
+
+    if (!topic.trim()) {
+      Alert.alert('Tema requerido', 'Escribe el tema de la sesión.');
+      return;
+    }
+    if (!when || Number.isNaN(Date.parse(when))) {
+      Alert.alert('Fecha inválida', 'Usa el formato YYYY-MM-DDTHH:mm, por ejemplo 2026-06-30T18:00.');
+      return;
+    }
+    if (!Number.isFinite(credits) || credits < 1) {
+      Alert.alert('Créditos inválidos', 'La sesión debe costar al menos 1 crédito.');
+      return;
+    }
+    if (!Number.isFinite(duration) || duration < 15) {
+      Alert.alert('Duración inválida', 'La duración mínima recomendada es 15 minutos.');
+      return;
+    }
+
+    setCreatingSession(true);
     try {
       await sessionService.create({
-        exchangeId: exchange.id,
-        topic: exchange.skillName || `Intercambio #${exchange.id}`,
-        scheduledAt: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
-        creditsAmount: 1,
-        durationMinutes: 45,
+        exchangeId: scheduleExchange.id,
+        topic: topic.trim(),
+        scheduledAt: when,
+        creditsAmount: credits,
+        durationMinutes: duration,
       });
       await refreshUser();
-      Alert.alert('Sesión propuesta', 'Se creó una sesión sugerida para mañana.');
+      setScheduleExchange(null);
+      Alert.alert('Sesión propuesta', 'La sesión fue enviada para aprobación.');
     } catch (error) {
-      Alert.alert('No se pudo crear sesión', readableError(error, 'Intenta desde la pestaña Sesiones.'));
+      Alert.alert('No se pudo crear sesión', readableError(error, 'Intenta nuevamente.'));
+    } finally {
+      setCreatingSession(false);
     }
   };
 
@@ -150,7 +202,7 @@ export default function ExchangesScreen() {
                   ) : null}
                   {exchange.status === 'ACCEPTED' ? (
                     <>
-                      <Button label="Agendar" icon={CalendarPlus} onPress={() => schedule(exchange)} />
+                      <Button label="Agendar" icon={CalendarPlus} onPress={() => openSchedule(exchange)} />
                       <Button label="Finalizar" variant="danger" onPress={() => end(exchange.id)} />
                     </>
                   ) : null}
@@ -160,6 +212,37 @@ export default function ExchangesScreen() {
           })}
         </View>
       )}
+
+      <Modal visible={!!scheduleExchange} transparent animationType="fade" onRequestClose={() => setScheduleExchange(null)}>
+        <View style={styles.modalBackdrop}>
+          <Card style={styles.modalCard}>
+            <Text style={styles.modalTitle}>Agendar sesión</Text>
+            <Text style={styles.modalSubtitle}>{scheduleExchange?.skillName || `Intercambio #${scheduleExchange?.id}`}</Text>
+
+            <Text style={styles.inputLabel}>Tema</Text>
+            <TextInput value={topic} onChangeText={setTopic} style={styles.input} placeholder="Tema de la sesión" placeholderTextColor="#64748b" />
+
+            <Text style={styles.inputLabel}>Fecha y hora</Text>
+            <TextInput value={scheduledAt} onChangeText={setScheduledAt} style={styles.input} placeholder="2026-06-30T18:00" placeholderTextColor="#64748b" autoCapitalize="none" />
+
+            <View style={styles.inputRow}>
+              <View style={styles.inputHalf}>
+                <Text style={styles.inputLabel}>Créditos</Text>
+                <TextInput value={creditsAmount} onChangeText={setCreditsAmount} style={styles.input} keyboardType="number-pad" />
+              </View>
+              <View style={styles.inputHalf}>
+                <Text style={styles.inputLabel}>Minutos</Text>
+                <TextInput value={durationMinutes} onChangeText={setDurationMinutes} style={styles.input} keyboardType="number-pad" />
+              </View>
+            </View>
+
+            <View style={styles.modalActions}>
+              <Button label="Cancelar" variant="secondary" onPress={() => setScheduleExchange(null)} disabled={creatingSession} />
+              <Button label="Proponer sesión" onPress={createSession} loading={creatingSession} />
+            </View>
+          </Card>
+        </View>
+      </Modal>
     </ScrollView>
   );
 }
@@ -230,5 +313,54 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     flexWrap: 'wrap',
     gap: 10,
+  },
+  modalBackdrop: {
+    alignItems: 'center',
+    backgroundColor: 'rgba(2, 6, 23, 0.72)',
+    flex: 1,
+    justifyContent: 'center',
+    padding: 20,
+  },
+  modalCard: {
+    gap: 12,
+    width: '100%',
+  },
+  modalTitle: {
+    color: colors.text,
+    fontSize: 20,
+    fontWeight: '900',
+  },
+  modalSubtitle: {
+    color: colors.muted,
+    fontSize: 13,
+  },
+  inputLabel: {
+    color: '#cbd5e1',
+    fontSize: 12,
+    fontWeight: '900',
+    textTransform: 'uppercase',
+  },
+  input: {
+    backgroundColor: colors.background,
+    borderColor: colors.border,
+    borderRadius: 10,
+    borderWidth: 1,
+    color: colors.text,
+    fontSize: 14,
+    padding: 12,
+  },
+  inputRow: {
+    flexDirection: 'row',
+    gap: 10,
+  },
+  inputHalf: {
+    flex: 1,
+    gap: 8,
+  },
+  modalActions: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 10,
+    justifyContent: 'flex-end',
   },
 });

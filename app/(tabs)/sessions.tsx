@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { Alert, RefreshControl, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Alert, Modal, RefreshControl, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { Calendar, CheckCircle2, Clock, Star, XCircle } from 'lucide-react-native';
 import { useAuth } from '@/context/AuthContext';
 import { creditService } from '@/services/creditService';
@@ -17,6 +17,10 @@ export default function SessionsScreen() {
   const [filter, setFilter] = useState('ALL');
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [reviewSession, setReviewSession] = useState<SessionSummaryResponse | null>(null);
+  const [rating, setRating] = useState(5);
+  const [comment, setComment] = useState('');
+  const [reviewing, setReviewing] = useState(false);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -86,27 +90,31 @@ export default function SessionsScreen() {
     ]);
   };
 
-  const review = (session: SessionSummaryResponse) => {
-    const reviewedId = session.teacherId === user?.id ? session.studentId : session.teacherId;
-    Alert.alert('Reseña rápida', '¿Registrar una reseña positiva de 5 estrellas?', [
-      { text: 'Cancelar', style: 'cancel' },
-      {
-        text: 'Registrar',
-        onPress: async () => {
-          try {
-            await reviewService.create({
-              sessionId: session.id,
-              reviewedId,
-              rating: 5,
-              comment: 'Buen intercambio académico.',
-            });
-            load();
-          } catch (error) {
-            Alert.alert('No se pudo crear reseña', readableError(error, 'Intenta desde la vista web si necesitas más detalle.'));
-          }
-        },
-      },
-    ]);
+  const openReview = (session: SessionSummaryResponse) => {
+    setReviewSession(session);
+    setRating(5);
+    setComment('');
+  };
+
+  const submitReview = async () => {
+    if (!reviewSession || reviewing) return;
+    const reviewedId = reviewSession.teacherId === user?.id ? reviewSession.studentId : reviewSession.teacherId;
+
+    setReviewing(true);
+    try {
+      await reviewService.create({
+        sessionId: reviewSession.id,
+        reviewedId,
+        rating,
+        comment: comment.trim() || undefined,
+      });
+      setReviewSession(null);
+      load();
+    } catch (error) {
+      Alert.alert('No se pudo crear reseña', readableError(error, 'Intenta nuevamente.'));
+    } finally {
+      setReviewing(false);
+    }
   };
 
   if (loading && !refreshing) return <LoadingState />;
@@ -165,7 +173,7 @@ export default function SessionsScreen() {
                     </>
                   ) : null}
                   {canConfirm ? <Button label="Confirmar asistencia" icon={CheckCircle2} onPress={() => confirm(session.id)} /> : null}
-                  {canReview ? <Button label="Reseñar" icon={Star} variant="secondary" onPress={() => review(session)} /> : null}
+                  {canReview ? <Button label="Reseñar" icon={Star} variant="secondary" onPress={() => openReview(session)} /> : null}
                   {session.status !== 'COMPLETED' && session.status !== 'CANCELLED' ? <Button label="Cancelar" variant="danger" onPress={() => cancel(session.id)} /> : null}
                 </View>
               </Card>
@@ -173,6 +181,39 @@ export default function SessionsScreen() {
           })}
         </View>
       )}
+
+      <Modal visible={!!reviewSession} transparent animationType="fade" onRequestClose={() => setReviewSession(null)}>
+        <View style={styles.modalBackdrop}>
+          <Card style={styles.modalCard}>
+            <Text style={styles.modalTitle}>Calificar experiencia</Text>
+            <Text style={styles.modalSubtitle}>{reviewSession?.topic}</Text>
+
+            <Text style={styles.inputLabel}>Puntaje</Text>
+            <View style={styles.starsRow}>
+              {[1, 2, 3, 4, 5].map((value) => (
+                <TouchableOpacity key={value} onPress={() => setRating(value)} style={styles.starButton}>
+                  <Star size={28} color={colors.accent} fill={value <= rating ? colors.accent : 'transparent'} />
+                </TouchableOpacity>
+              ))}
+            </View>
+
+            <Text style={styles.inputLabel}>Comentario opcional</Text>
+            <TextInput
+              value={comment}
+              onChangeText={setComment}
+              multiline
+              style={[styles.input, styles.commentInput]}
+              placeholder="Cuenta cómo fue el intercambio..."
+              placeholderTextColor="#64748b"
+            />
+
+            <View style={styles.modalActions}>
+              <Button label="Cancelar" variant="secondary" onPress={() => setReviewSession(null)} disabled={reviewing} />
+              <Button label="Enviar reseña" onPress={submitReview} loading={reviewing} />
+            </View>
+          </Card>
+        </View>
+      </Modal>
     </ScrollView>
   );
 }
@@ -253,5 +294,57 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     flexWrap: 'wrap',
     gap: 10,
+  },
+  modalBackdrop: {
+    alignItems: 'center',
+    backgroundColor: 'rgba(2, 6, 23, 0.72)',
+    flex: 1,
+    justifyContent: 'center',
+    padding: 20,
+  },
+  modalCard: {
+    gap: 12,
+    width: '100%',
+  },
+  modalTitle: {
+    color: colors.text,
+    fontSize: 20,
+    fontWeight: '900',
+  },
+  modalSubtitle: {
+    color: colors.muted,
+    fontSize: 13,
+  },
+  inputLabel: {
+    color: '#cbd5e1',
+    fontSize: 12,
+    fontWeight: '900',
+    textTransform: 'uppercase',
+  },
+  input: {
+    backgroundColor: colors.background,
+    borderColor: colors.border,
+    borderRadius: 10,
+    borderWidth: 1,
+    color: colors.text,
+    fontSize: 14,
+    padding: 12,
+  },
+  commentInput: {
+    minHeight: 100,
+    textAlignVertical: 'top',
+  },
+  starsRow: {
+    flexDirection: 'row',
+    gap: 8,
+  },
+  starButton: {
+    padding: 4,
+  },
+  modalActions: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 10,
+    justifyContent: 'flex-end',
   },
 });

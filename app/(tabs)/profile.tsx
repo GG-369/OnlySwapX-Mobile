@@ -1,11 +1,12 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { Alert, Image, RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
-import { BookOpen, Briefcase, Camera, Coins, GraduationCap, Image as ImageIcon, LogOut, Mail, ShieldCheck } from 'lucide-react-native';
+import { BookOpen, Briefcase, Camera, Coins, GraduationCap, Image as ImageIcon, LogOut, Mail, ShieldCheck, Star } from 'lucide-react-native';
 import type { LucideIcon } from 'lucide-react-native';
 import { useAuth } from '@/context/AuthContext';
 import { creditService } from '@/services/creditService';
 import { skillService } from '@/services/skillService';
-import { CreditTransactionResponse, SkillSummaryResponse } from '@/types';
+import { reviewService } from '@/services/reviewService';
+import { CreditTransactionResponse, RoleRatingsResponse, SkillSummaryResponse } from '@/types';
 import { Badge, Button, Card, LoadingState, ScreenHeader, colors } from '@/components/ui';
 import { useProfilePhoto } from '@/hooks/useProfilePhoto';
 import { formatDate, initialsOf, readableError } from '@/utils/format';
@@ -15,25 +16,28 @@ export default function ProfileScreen() {
   const photo = useProfilePhoto(user?.id, user?.avatarUrl);
   const [skills, setSkills] = useState<SkillSummaryResponse[]>([]);
   const [history, setHistory] = useState<CreditTransactionResponse[]>([]);
+  const [ratings, setRatings] = useState<RoleRatingsResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
 
   const load = useCallback(async () => {
     setLoading(true);
     try {
-      const [skillsRes, historyRes] = await Promise.allSettled([
+      const [skillsRes, historyRes, ratingsRes] = await Promise.allSettled([
         skillService.getMySkills(),
         creditService.getHistory(),
+        user?.id ? reviewService.getRoleRatings(user.id) : Promise.resolve(null),
       ]);
       if (skillsRes.status === 'fulfilled') setSkills(skillsRes.value);
       if (historyRes.status === 'fulfilled') setHistory(historyRes.value);
+      if (ratingsRes.status === 'fulfilled') setRatings(ratingsRes.value);
     } catch (error) {
       Alert.alert('No se cargó tu perfil', readableError(error, 'Intenta nuevamente.'));
     } finally {
       setLoading(false);
       setRefreshing(false);
     }
-  }, []);
+  }, [user?.id]);
 
   useEffect(() => {
     load();
@@ -105,6 +109,24 @@ export default function ProfileScreen() {
         {user?.career ? <InfoRow icon={Briefcase} text={user.career} /> : null}
         <InfoRow icon={Mail} text={user?.email || 'Sin correo'} />
       </Card>
+
+      <View style={styles.sectionHeader}>
+        <Text style={styles.sectionTitle}>Puntaje de reseñas</Text>
+        <Text style={styles.sectionSubtitle}>Promedio recibido como teacher y student</Text>
+      </View>
+
+      <View style={styles.ratingGrid}>
+        <Card style={styles.ratingCard}>
+          <Star size={20} color={colors.accent} fill={colors.accent} />
+          <Text style={styles.ratingValue}>{(ratings?.asTeacher?.average ?? 0).toFixed(1)}</Text>
+          <Text style={styles.ratingLabel}>Como teacher · {ratings?.asTeacher?.count ?? 0} reseña(s)</Text>
+        </Card>
+        <Card style={styles.ratingCard}>
+          <Star size={20} color={colors.accent} fill={colors.accent} />
+          <Text style={styles.ratingValue}>{(ratings?.asStudent?.average ?? 0).toFixed(1)}</Text>
+          <Text style={styles.ratingLabel}>Como student · {ratings?.asStudent?.count ?? 0} reseña(s)</Text>
+        </Card>
+      </View>
 
       <View style={styles.sectionHeader}>
         <Text style={styles.sectionTitle}>Actividad de créditos</Text>
@@ -245,6 +267,27 @@ const styles = StyleSheet.create({
     color: colors.muted,
     fontSize: 12,
     marginTop: 2,
+  },
+
+  ratingGrid: {
+    flexDirection: 'row',
+    gap: 10,
+  },
+  ratingCard: {
+    alignItems: 'center',
+    flex: 1,
+    gap: 6,
+  },
+  ratingValue: {
+    color: colors.text,
+    fontSize: 24,
+    fontWeight: '900',
+  },
+  ratingLabel: {
+    color: colors.muted,
+    fontSize: 11,
+    fontWeight: '800',
+    textAlign: 'center',
   },
   historyList: {
     gap: 10,

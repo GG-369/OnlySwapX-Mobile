@@ -54,14 +54,14 @@ export interface SkillCreateRequest {
   description?: string;
   category?: string;
   skillType: 'OFFER' | 'WANT';
-  level?: string;
+  level?: 'BEGINNER' | 'INTERMEDIATE' | 'ADVANCED' | 'BASICO' | 'INTERMEDIO' | 'AVANZADO' | string;
 }
 
 export interface SkillUpdateRequest {
   name?: string;
   description?: string;
   category?: string;
-  level?: string;
+  level?: 'BEGINNER' | 'INTERMEDIATE' | 'ADVANCED' | 'BASICO' | 'INTERMEDIO' | 'AVANZADO' | string;
 }
 
 export interface SkillDetailResponse {
@@ -183,7 +183,7 @@ export interface SessionSummaryResponse {
 export interface MessageRequest {
   exchangeId: number;
   content: string;
-  messageType?: 'TEXT' | 'AUDIO' | 'SYSTEM' | string;
+  messageType?: 'TEXT' | 'SYSTEM' | 'SESSION_CARD' | string;
 }
 
 export interface MessageResponse {
@@ -192,7 +192,7 @@ export interface MessageResponse {
   senderId: number;
   senderName: string;
   content: string;
-  messageType: 'TEXT' | 'AUDIO' | 'SYSTEM' | string;
+  messageType: 'TEXT' | 'SYSTEM' | 'SESSION_CARD' | string;
   createdAt: string;
 }
 

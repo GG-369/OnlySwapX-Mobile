@@ -13,8 +13,7 @@
       "infoPlist": {
         "NSCameraUsageDescription": "OnlySwapX usa la cámara para actualizar tu foto de perfil y documentos de verificación.",
         "NSPhotoLibraryUsageDescription": "OnlySwapX usa tu galería para seleccionar fotos de perfil y documentos de verificación.",
-        "NSLocationWhenInUseUsageDescription": "OnlySwapX usa tu ubicación para priorizar personas cercanas dentro del campus.",
-        "NSMicrophoneUsageDescription": "OnlySwapX usa el micrófono para grabar notas de voz en los intercambios."
+        "NSLocationWhenInUseUsageDescription": "OnlySwapX usa tu ubicación para priorizar personas cercanas dentro del campus."
       }
     },
     "android": {
@@ -29,8 +28,7 @@
       "permissions": [
         "CAMERA",
         "READ_MEDIA_IMAGES",
-        "ACCESS_FINE_LOCATION",
-        "RECORD_AUDIO"
+        "ACCESS_FINE_LOCATION"
       ]
     },
     "web": {
@@ -50,12 +48,6 @@
         "expo-location",
         {
           "locationAlwaysAndWhenInUsePermission": "OnlySwapX usa tu ubicación para priorizar personas cercanas dentro del campus."
-        }
-      ],
-      [
-        "expo-av",
-        {
-          "microphonePermission": "OnlySwapX usa el micrófono para grabar notas de voz en los intercambios."
         }
       ],
       [

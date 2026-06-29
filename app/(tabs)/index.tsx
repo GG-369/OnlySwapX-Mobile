@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { Alert, RefreshControl, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { Alert, Modal, RefreshControl, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { Brain, Filter, LocateFixed, Search, Sparkles } from 'lucide-react-native';
 import { useAuth } from '@/context/AuthContext';
 import { skillService } from '@/services/skillService';
@@ -25,6 +25,9 @@ export default function DiscoverScreen() {
   const [page, setPage] = useState(0);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [proposalSkill, setProposalSkill] = useState<SkillDetailResponse | null>(null);
+  const [proposalMessage, setProposalMessage] = useState('');
+  const [proposalLoading, setProposalLoading] = useState(false);
 
   const currentCampus = useMemo(() => campusFromUniversity(user?.university), [user?.university]);
 
@@ -69,7 +72,7 @@ export default function DiscoverScreen() {
     skillService.getDiscoverBatch(skills.map((skill) => skill.id)).then(setBatchData).catch(() => {});
   }, [pageData]);
 
-  const proposeExchange = async (skill: SkillDetailResponse) => {
+  const openProposal = async (skill: SkillDetailResponse) => {
     if (skill.userId === user?.id) {
       Alert.alert('Intercambio inválido', 'No puedes proponerte un intercambio a ti mismo.');
       return;
@@ -81,16 +84,36 @@ export default function DiscoverScreen() {
         Alert.alert('Intercambio existente', check.status ? `Ya tienes un intercambio ${check.status} con esta persona.` : 'Ya existe una propuesta activa.');
         return;
       }
+      setProposalSkill(skill);
+      setProposalMessage(`Hola, me interesa intercambiar por ${skill.name}. ¿Te gustaría coordinar?`);
+    } catch (error) {
+      Alert.alert('No se pudo validar', readableError(error, 'Inténtalo nuevamente.'));
+    }
+  };
 
+  const sendProposal = async () => {
+    if (!proposalSkill || proposalLoading) return;
+    const message = proposalMessage.trim();
+    if (!message) {
+      Alert.alert('Mensaje requerido', 'Escribe un mensaje breve para la propuesta.');
+      return;
+    }
+
+    setProposalLoading(true);
+    try {
       await exchangeService.create({
-        receiverId: skill.userId,
-        skillId: skill.id,
-        message: `Me interesa intercambiar por ${skill.name}.`,
+        receiverId: proposalSkill.userId,
+        skillId: proposalSkill.id,
+        message,
       });
+      setProposalSkill(null);
+      setProposalMessage('');
       Alert.alert('Propuesta enviada', 'Tu intercambio fue creado correctamente.');
       load();
     } catch (error) {
       Alert.alert('No se pudo proponer', readableError(error, 'Inténtalo nuevamente.'));
+    } finally {
+      setProposalLoading(false);
     }
   };
 
@@ -192,7 +215,7 @@ export default function DiscoverScreen() {
                 rating={batchData[skill.id]?.ownerRating?.average ?? null}
                 distanceMeters={distance}
                 campusName={skill.ownerCampusName || (distance !== null ? formatDistance(distance) : currentCampus?.name)}
-                onPropose={() => proposeExchange(skill)}
+                onPropose={() => openProposal(skill)}
               />
             );
           })}
@@ -206,6 +229,28 @@ export default function DiscoverScreen() {
           <Button label="Siguiente" variant="secondary" disabled={page >= pageData.totalPages - 1} onPress={() => setPage((value) => value + 1)} />
         </View>
       ) : null}
+
+      <Modal visible={!!proposalSkill} transparent animationType="fade" onRequestClose={() => setProposalSkill(null)}>
+        <View style={styles.modalBackdrop}>
+          <Card style={styles.proposalModal}>
+            <Text style={styles.modalTitle}>Proponer intercambio</Text>
+            <Text style={styles.modalSubtitle}>{proposalSkill?.name}</Text>
+            <Text style={styles.inputLabel}>Mensaje</Text>
+            <TextInput
+              value={proposalMessage}
+              onChangeText={setProposalMessage}
+              multiline
+              style={[styles.textInput, styles.messageInput]}
+              placeholder="Escribe por qué quieres hacer este intercambio..."
+              placeholderTextColor="#64748b"
+            />
+            <View style={styles.modalActions}>
+              <Button label="Cancelar" variant="secondary" onPress={() => setProposalSkill(null)} disabled={proposalLoading} />
+              <Button label="Enviar propuesta" onPress={sendProposal} loading={proposalLoading} />
+            </View>
+          </Card>
+        </View>
+      </Modal>
     </ScrollView>
   );
 }
@@ -349,5 +394,51 @@ const styles = StyleSheet.create({
     color: colors.muted,
     fontSize: 12,
     fontWeight: '700',
+  },
+
+  modalBackdrop: {
+    alignItems: 'center',
+    backgroundColor: 'rgba(2, 6, 23, 0.72)',
+    flex: 1,
+    justifyContent: 'center',
+    padding: 20,
+  },
+  proposalModal: {
+    gap: 12,
+    width: '100%',
+  },
+  modalTitle: {
+    color: colors.text,
+    fontSize: 20,
+    fontWeight: '900',
+  },
+  modalSubtitle: {
+    color: colors.muted,
+    fontSize: 13,
+  },
+  inputLabel: {
+    color: '#cbd5e1',
+    fontSize: 12,
+    fontWeight: '900',
+    textTransform: 'uppercase',
+  },
+  textInput: {
+    backgroundColor: colors.background,
+    borderColor: colors.border,
+    borderRadius: 10,
+    borderWidth: 1,
+    color: colors.text,
+    fontSize: 14,
+    padding: 12,
+  },
+  messageInput: {
+    minHeight: 110,
+    textAlignVertical: 'top',
+  },
+  modalActions: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 10,
+    justifyContent: 'flex-end',
   },
 });

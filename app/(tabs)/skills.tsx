@@ -2,13 +2,31 @@ import React, { useCallback, useEffect, useState } from 'react';
 import { Alert, Modal, RefreshControl, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { Plus, Target, X } from 'lucide-react-native';
 import { skillService } from '@/services/skillService';
-import { SkillCreateRequest, SkillDetailResponse, SkillSummaryResponse } from '@/types';
+import { SkillSummaryResponse } from '@/types';
 import { Button, Card, EmptyState, LoadingState, ScreenHeader, colors } from '@/components/ui';
 import { SkillItem } from '@/components/SkillItem';
 import { readableError } from '@/utils/format';
 
 const CATEGORIES = ['TECNOLOGIA', 'CIENCIAS', 'HUMANIDADES', 'ARTE', 'IDIOMAS', 'NEGOCIOS', 'OTRO'];
-const LEVELS = ['BASICO', 'INTERMEDIO', 'AVANZADO'];
+const LEVELS = [
+  { label: 'Básico', value: 'BEGINNER' },
+  { label: 'Intermedio', value: 'INTERMEDIATE' },
+  { label: 'Avanzado', value: 'ADVANCED' },
+] as const;
+
+const normalizeLevel = (value?: string) => {
+  if (!value) return 'INTERMEDIATE';
+  const upper = value.toUpperCase();
+  const map: Record<string, string> = {
+    BASICO: 'BEGINNER',
+    BEGINNER: 'BEGINNER',
+    INTERMEDIO: 'INTERMEDIATE',
+    INTERMEDIATE: 'INTERMEDIATE',
+    AVANZADO: 'ADVANCED',
+    ADVANCED: 'ADVANCED',
+  };
+  return map[upper] || 'INTERMEDIATE';
+};
 
 export default function SkillsScreen() {
   const [skills, setSkills] = useState<SkillSummaryResponse[]>([]);
@@ -100,11 +118,11 @@ export default function SkillsScreen() {
   );
 }
 
-function SkillFormModal({ visible, initialData, onClose, onSaved, }: { visible: boolean; initialData: SkillSummaryResponse | null; onClose: () => void; onSaved: () => void; }) {
+function SkillFormModal({ visible, initialData, onClose, onSaved }: { visible: boolean; initialData: SkillSummaryResponse | null; onClose: () => void; onSaved: () => void }) {
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
   const [category, setCategory] = useState(CATEGORIES[0]);
-  const [level, setLevel] = useState(LEVELS[1]);
+  const [level, setLevel] = useState('INTERMEDIATE');
   const [skillType, setSkillType] = useState<'OFFER' | 'WANT'>('OFFER');
   const [submitting, setSubmitting] = useState(false);
 
@@ -112,7 +130,7 @@ function SkillFormModal({ visible, initialData, onClose, onSaved, }: { visible: 
     setName(initialData?.name || '');
     setDescription(initialData?.description || '');
     setCategory(initialData?.category || CATEGORIES[0]);
-    setLevel(initialData?.level || LEVELS[1]);
+    setLevel(normalizeLevel(initialData?.level));
     setSkillType(initialData?.skillType === 'WANT' ? 'WANT' : 'OFFER');
   }, [initialData, visible]);
 
@@ -185,8 +203,8 @@ function SkillFormModal({ visible, initialData, onClose, onSaved, }: { visible: 
           <Text style={styles.label}>Nivel</Text>
           <View style={styles.wrap}>
             {LEVELS.map((item) => (
-              <TouchableOpacity key={item} style={[styles.chip, level === item && styles.chipActive]} onPress={() => setLevel(item)}>
-                <Text style={[styles.chipText, level === item && styles.chipTextActive]}>{item}</Text>
+              <TouchableOpacity key={item.value} style={[styles.chip, level === item.value && styles.chipActive]} onPress={() => setLevel(item.value)}>
+                <Text style={[styles.chipText, level === item.value && styles.chipTextActive]}>{item.label}</Text>
               </TouchableOpacity>
             ))}
           </View>
