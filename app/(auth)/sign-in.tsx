@@ -39,7 +39,7 @@ export default function SignInScreen() {
           <Text style={styles.label}>Correo electrónico</Text>
           <TextInput
             style={styles.input}
-            placeholder="tu@universidad.edu"
+            placeholder="alumno@utec.edu.pe"
             placeholderTextColor="#64748b"
             value={email}
             autoCapitalize="none"

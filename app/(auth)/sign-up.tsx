@@ -49,7 +49,7 @@ export default function SignUpScreen() {
           <TextInput style={styles.input} placeholder="Tu nombre" placeholderTextColor="#64748b" value={fullName} onChangeText={setFullName} />
 
           <Text style={styles.label}>Correo electrónico</Text>
-          <TextInput style={styles.input} placeholder="tu@universidad.edu" placeholderTextColor="#64748b" value={email} autoCapitalize="none" keyboardType="email-address" onChangeText={setEmail} />
+          <TextInput style={styles.input} placeholder="alumno@utec.edu.pe" placeholderTextColor="#64748b" value={email} autoCapitalize="none" keyboardType="email-address" onChangeText={setEmail} />
 
           <Text style={styles.label}>Contraseña</Text>
           <TextInput style={styles.input} placeholder="Mínimo 6 caracteres" placeholderTextColor="#64748b" value={password} autoCapitalize="none" secureTextEntry onChangeText={setPassword} />

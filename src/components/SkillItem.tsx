@@ -14,6 +14,7 @@ const skillLevelLabel = (level?: string) => {
     ADVANCED: 'Avanzado',
     AVANZADO: 'Avanzado',
   };
+
   return labels[level || ''] || level;
 };
 
@@ -50,7 +51,7 @@ export function SkillItem({ skill, ownerName, rating, distanceMeters, campusName
 
         <View style={styles.metaRow}>
           {skill.category ? <Badge>{skill.category}</Badge> : null}
-          {skill.level ? <Badge>{skillLevelLabel(skill.level)}</Badge> : null}
+          {skill.level ? <Badge tone="blue">{skillLevelLabel(skill.level)}</Badge> : null}
         </View>
 
         <View style={styles.sensorRow}>
