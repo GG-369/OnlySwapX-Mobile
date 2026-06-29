@@ -12,7 +12,7 @@ const LEVELS = ['BASICO', 'INTERMEDIO', 'AVANZADO'];
 
 export default function SkillsScreen() {
   const [skills, setSkills] = useState<SkillSummaryResponse[]>([]);
-  const [editingSkill, setEditingSkill] = useState<SkillDetailResponse | null>(null);
+  const [editingSkill, setEditingSkill] = useState<SkillSummaryResponse | null>(null);
   const [modalVisible, setModalVisible] = useState(false);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -38,13 +38,9 @@ export default function SkillsScreen() {
     setModalVisible(true);
   };
 
-  const openEdit = async (skill: SkillSummaryResponse) => {
-    try {
-      setEditingSkill(await skillService.getById(skill.id));
-      setModalVisible(true);
-    } catch (error) {
-      Alert.alert('No se pudo abrir el skill', readableError(error, 'Intenta nuevamente.'));
-    }
+  const openEdit = (skill: SkillSummaryResponse) => {
+    setEditingSkill(skill);
+    setModalVisible(true);
   };
 
   const remove = (skill: SkillSummaryResponse) => {
@@ -104,7 +100,7 @@ export default function SkillsScreen() {
   );
 }
 
-function SkillFormModal({ visible, initialData, onClose, onSaved }: { visible: boolean; initialData: SkillDetailResponse | null; onClose: () => void; onSaved: () => void }) {
+function SkillFormModal({ visible, initialData, onClose, onSaved, }: { visible: boolean; initialData: SkillSummaryResponse | null; onClose: () => void; onSaved: () => void; }) {
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
   const [category, setCategory] = useState(CATEGORIES[0]);
@@ -126,20 +122,22 @@ function SkillFormModal({ visible, initialData, onClose, onSaved }: { visible: b
       return;
     }
 
-    const payload: SkillCreateRequest = {
+    const basePayload = {
       name: name.trim(),
       description: description.trim() || undefined,
       category,
       level,
-      skillType,
     };
 
     setSubmitting(true);
     try {
       if (initialData) {
-        await skillService.update(initialData.id, payload);
+        await skillService.update(initialData.id, basePayload);
       } else {
-        await skillService.create(payload);
+        await skillService.create({
+          ...basePayload,
+          skillType,
+        });
       }
       onSaved();
     } catch (error) {
