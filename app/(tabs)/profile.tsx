@@ -1,200 +1,285 @@
-import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Image, ScrollView, Alert, ActivityIndicator } from 'react-native';
-import { useAuth } from '../../src/lib/auth-context';
-import { Camera, MapPin, Briefcase, Mail, Zap, BookOpen } from 'lucide-react-native';
-import * as ImagePicker from 'expo-image-picker';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import { Avatar } from '../../src/components/ui/Avatar';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import { Alert, Image, RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { BookOpen, Briefcase, Camera, Coins, GraduationCap, Image as ImageIcon, LogOut, Mail, ShieldCheck } from 'lucide-react-native';
+import type { LucideIcon } from 'lucide-react-native';
+import { useAuth } from '@/context/AuthContext';
+import { creditService } from '@/services/creditService';
+import { skillService } from '@/services/skillService';
+import { CreditTransactionResponse, SkillSummaryResponse } from '@/types';
+import { Badge, Button, Card, LoadingState, ScreenHeader, colors } from '@/components/ui';
+import { useProfilePhoto } from '@/hooks/useProfilePhoto';
+import { formatDate, initialsOf, readableError } from '@/utils/format';
 
 export default function ProfileScreen() {
-  const { user } = useAuth();
-  const [profileImage, setProfileImage] = useState<string | null>(null);
-  const [isLoadingImage, setIsLoadingImage] = useState(true);
+  const { user, logout } = useAuth();
+  const photo = useProfilePhoto(user?.id, user?.avatarUrl);
+  const [skills, setSkills] = useState<SkillSummaryResponse[]>([]);
+  const [history, setHistory] = useState<CreditTransactionResponse[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
 
-  // 1. Cargar la imagen guardada al iniciar
-  useEffect(() => {
-    const loadSavedImage = async () => {
-      try {
-        const savedUri = await AsyncStorage.getItem(`profile_image_${user?.id}`);
-        if (savedUri) {
-          setProfileImage(savedUri);
-        }
-      } catch (error) {
-        console.error("Error al cargar la imagen:", error);
-      } finally {
-        setIsLoadingImage(false);
-      }
-    };
-    loadSavedImage();
-  }, [user?.id]);
-
-  // 2. Función del Sensor: Abrir galería/cámara
-  const pickImage = async () => {
-    // Pedir permisos
-    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
-    
-    if (status !== 'granted') {
-      Alert.alert('Permiso denegado', 'Necesitamos acceso a tu galería para cambiar tu foto.');
-      return;
-    }
-
+  const load = useCallback(async () => {
+    setLoading(true);
     try {
-      let result = await ImagePicker.launchImageLibraryAsync({
-        mediaTypes: ImagePicker.MediaTypeOptions.Images, // Antes era MediaTypeOptions.Images
-        allowsEditing: true,
-        aspect: [1, 1], // Cuadrado perfecto
-        quality: 0.8, // Buena calidad, tamaño decente
-      });
-
-      if (!result.canceled && result.assets && result.assets.length > 0) {
-        const newImageUri = result.assets[0].uri;
-        setProfileImage(newImageUri);
-        // Guardar localmente
-        await AsyncStorage.setItem(`profile_image_${user?.id}`, newImageUri);
-        Alert.alert("¡Éxito!", "Foto de perfil actualizada.");
-      }
+      const [skillsRes, historyRes] = await Promise.allSettled([
+        skillService.getMySkills(),
+        creditService.getHistory(),
+      ]);
+      if (skillsRes.status === 'fulfilled') setSkills(skillsRes.value);
+      if (historyRes.status === 'fulfilled') setHistory(historyRes.value);
     } catch (error) {
-      Alert.alert("Error", "No se pudo seleccionar la imagen.");
+      Alert.alert('No se cargó tu perfil', readableError(error, 'Intenta nuevamente.'));
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    load();
+  }, [load]);
+
+  const offerCount = useMemo(() => skills.filter((skill) => skill.skillType === 'OFFER').length, [skills]);
+  const wantCount = useMemo(() => skills.filter((skill) => skill.skillType === 'WANT').length, [skills]);
+
+  const runPhotoAction = async (action: () => Promise<void>) => {
+    try {
+      await action();
+    } catch (error) {
+      Alert.alert('No se pudo actualizar la foto', error instanceof Error ? error.message : 'Intenta nuevamente.');
     }
   };
 
-  if (!user) return null;
+  if (loading && !refreshing) return <LoadingState />;
 
   return (
-    <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
-      
-      {/* HEADER & FOTO DE PERFIL */}
-      <View style={styles.headerContainer}>
-        <View style={styles.imageWrapper}>
-          {isLoadingImage ? (
-            <View style={[styles.avatarFallback, styles.loadingWrapper]}>
-              <ActivityIndicator color="#2563eb" />
-            </View>
-          ) : profileImage ? (
-            <Image source={{ uri: profileImage }} style={styles.profileImage} />
+    <ScrollView
+      style={styles.container}
+      contentContainerStyle={styles.content}
+      refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => { setRefreshing(true); load(); }} tintColor={colors.accent} />}
+      showsVerticalScrollIndicator={false}
+    >
+      <ScreenHeader title="Perfil" subtitle="Identidad, créditos y actividad" right={<Button label="Salir" icon={LogOut} variant="secondary" onPress={logout} />} />
+
+      <Card style={styles.profileCard}>
+        <View style={styles.avatarWrap}>
+          {photo.photoUri ? (
+            <Image source={{ uri: photo.photoUri }} style={styles.avatarImage} />
           ) : (
-             // Usamos tu componente Avatar si no hay foto
-            <Avatar name={user.fullName} size="xl" style={styles.avatarFallback} />
+            <View style={styles.avatarFallback}>
+              <Text style={styles.avatarText}>{initialsOf(user?.fullName)}</Text>
+            </View>
           )}
-          
-          {/* Botón Flotante para usar el Sensor (Cámara/Galería) */}
-          <TouchableOpacity style={styles.cameraButton} onPress={pickImage}>
-            <Camera size={16} color="#fff" />
-          </TouchableOpacity>
+          <Badge tone="accent">Verificado</Badge>
         </View>
 
-        <Text style={styles.nameText}>{user.fullName}</Text>
-        <Text style={styles.roleText}>{user.role || "Estudiante"}</Text>
+        <Text style={styles.name}>{user?.fullName}</Text>
+        <Text style={styles.email}>{user?.email}</Text>
+
+        <View style={styles.photoActions}>
+          <Button label="Cámara" icon={Camera} variant="secondary" onPress={() => runPhotoAction(photo.takePhoto)} loading={photo.loading} />
+          <Button label="Galería" icon={ImageIcon} variant="secondary" onPress={() => runPhotoAction(photo.pickFromGallery)} loading={photo.loading} />
+        </View>
+      </Card>
+
+      <View style={styles.infoGrid}>
+        <Card style={styles.metric}>
+          <Coins size={20} color={colors.accent} />
+          <Text style={styles.metricValue}>{user?.creditsBalance ?? 0}</Text>
+          <Text style={styles.metricLabel}>Créditos</Text>
+        </Card>
+        <Card style={styles.metric}>
+          <BookOpen size={20} color={colors.accent} />
+          <Text style={styles.metricValue}>{offerCount}</Text>
+          <Text style={styles.metricLabel}>Ofrezco</Text>
+        </Card>
+        <Card style={styles.metric}>
+          <ShieldCheck size={20} color={colors.accent} />
+          <Text style={styles.metricValue}>{wantCount}</Text>
+          <Text style={styles.metricLabel}>Busco</Text>
+        </Card>
       </View>
 
-      {/* TARJETA DE ESTADÍSTICAS */}
-      <View style={styles.statsCard}>
-        <View style={styles.statItem}>
-          <Zap size={20} color="#84cc16" />
-          <Text style={styles.statValue}>{user.creditsBalance ?? 0}</Text>
-          <Text style={styles.statLabel}>Créditos</Text>
-        </View>
-        <View style={styles.statDivider} />
-        <View style={styles.statItem}>
-          <BookOpen size={20} color="#2563eb" />
-          <Text style={styles.statValue}>--</Text>
-          <Text style={styles.statLabel}>Sesiones</Text>
-        </View>
+      <Card style={styles.detailsCard}>
+        {user?.university ? <InfoRow icon={GraduationCap} text={user.university} /> : null}
+        {user?.career ? <InfoRow icon={Briefcase} text={user.career} /> : null}
+        <InfoRow icon={Mail} text={user?.email || 'Sin correo'} />
+      </Card>
+
+      <View style={styles.sectionHeader}>
+        <Text style={styles.sectionTitle}>Actividad de créditos</Text>
+        <Text style={styles.sectionSubtitle}>Últimas transacciones</Text>
       </View>
 
-      {/* INFORMACIÓN PERSONAL */}
-      <Text style={styles.sectionTitle}>Información Personal</Text>
-      <View style={styles.infoCard}>
-        <View style={styles.infoRow}>
-          <Mail size={18} color="#94a3b8" />
-          <View style={styles.infoTextContainer}>
-            <Text style={styles.infoLabel}>Correo Académico</Text>
-            <Text style={styles.infoValue}>{user.email}</Text>
-          </View>
-        </View>
-
-        {user.university && (
-          <View style={styles.infoRow}>
-            <MapPin size={18} color="#94a3b8" />
-            <View style={styles.infoTextContainer}>
-              <Text style={styles.infoLabel}>Universidad</Text>
-              <Text style={styles.infoValue}>{user.university}</Text>
+      <View style={styles.historyList}>
+        {history.length === 0 ? (
+          <Card>
+            <Text style={styles.emptyText}>Aún no tienes movimientos de créditos.</Text>
+          </Card>
+        ) : history.slice(0, 8).map((tx) => (
+          <Card key={tx.id} style={styles.transaction}>
+            <View style={styles.transactionText}>
+              <Text style={styles.transactionTitle}>{tx.description || tx.type}</Text>
+              <Text style={styles.transactionDate}>{formatDate(tx.createdAt)}</Text>
             </View>
-          </View>
-        )}
-
-        {user.career && (
-          <View style={styles.infoRow}>
-            <Briefcase size={18} color="#94a3b8" />
-            <View style={styles.infoTextContainer}>
-              <Text style={styles.infoLabel}>Carrera</Text>
-              <Text style={styles.infoValue}>{user.career}</Text>
-            </View>
-          </View>
-        )}
+            <Text style={[styles.amount, tx.amount >= 0 ? styles.amountPositive : styles.amountNegative]}>
+              {tx.amount >= 0 ? '+' : ''}{tx.amount}
+            </Text>
+          </Card>
+        ))}
       </View>
-
     </ScrollView>
   );
 }
 
+function InfoRow({ icon: Icon, text }: { icon: LucideIcon; text: string }) {
+  return (
+    <View style={styles.infoRow}>
+      <Icon size={17} color={colors.accent} />
+      <Text style={styles.infoText}>{text}</Text>
+    </View>
+  );
+}
+
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#0f172a' },
-  headerContainer: { alignItems: 'center', paddingTop: 60, paddingBottom: 20 },
-  
-  // Estilos de Imagen
-  imageWrapper: { position: 'relative', marginBottom: 15 },
-  profileImage: { width: 100, height: 100, borderRadius: 50, borderWidth: 3, borderColor: '#1e293b' },
-  avatarFallback: { width: 100, height: 100, borderRadius: 50, borderWidth: 3, borderColor: '#1e293b' },
-  loadingWrapper: { backgroundColor: '#1e293b', justifyContent: 'center', alignItems: 'center' },
-  
-  cameraButton: {
-    position: 'absolute',
-    bottom: 0,
-    right: 0,
-    backgroundColor: '#2563eb',
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    justifyContent: 'center',
+  container: {
+    backgroundColor: colors.background,
+    flex: 1,
+  },
+  content: {
+    padding: 20,
+    paddingBottom: 96,
+    paddingTop: 58,
+  },
+  profileCard: {
     alignItems: 'center',
+    gap: 12,
+  },
+  avatarWrap: {
+    alignItems: 'center',
+    gap: 10,
+  },
+  avatarImage: {
+    borderColor: 'rgba(250, 204, 21, 0.45)',
+    borderRadius: 52,
     borderWidth: 2,
-    borderColor: '#0f172a',
+    height: 104,
+    width: 104,
   },
-
-  // Estilos de Texto del Header
-  nameText: { color: '#f8fafc', fontSize: 22, fontWeight: 'bold' },
-  roleText: { color: '#3b82f6', fontSize: 14, fontWeight: '600', marginTop: 4, textTransform: 'uppercase' },
-
-  // Stats Card
-  statsCard: {
+  avatarFallback: {
+    alignItems: 'center',
+    backgroundColor: 'rgba(250, 204, 21, 0.12)',
+    borderColor: 'rgba(250, 204, 21, 0.45)',
+    borderRadius: 52,
+    borderWidth: 2,
+    height: 104,
+    justifyContent: 'center',
+    width: 104,
+  },
+  avatarText: {
+    color: colors.accent,
+    fontSize: 31,
+    fontWeight: '900',
+  },
+  name: {
+    color: colors.text,
+    fontSize: 21,
+    fontWeight: '900',
+    textAlign: 'center',
+  },
+  email: {
+    color: colors.muted,
+    fontSize: 13,
+  },
+  photoActions: {
     flexDirection: 'row',
-    backgroundColor: '#1e293b',
-    marginHorizontal: 20,
-    borderRadius: 16,
-    paddingVertical: 20,
-    marginBottom: 25,
-    borderWidth: 1,
-    borderColor: '#334155'
+    flexWrap: 'wrap',
+    gap: 10,
+    justifyContent: 'center',
   },
-  statItem: { flex: 1, alignItems: 'center', gap: 6 },
-  statDivider: { width: 1, backgroundColor: '#334155' },
-  statValue: { color: '#f8fafc', fontSize: 20, fontWeight: 'bold' },
-  statLabel: { color: '#94a3b8', fontSize: 12 },
-
-  // Info Card
-  sectionTitle: { color: '#f8fafc', fontSize: 18, fontWeight: 'bold', marginHorizontal: 20, marginBottom: 10 },
-  infoCard: {
-    backgroundColor: '#1e293b',
-    marginHorizontal: 20,
-    borderRadius: 16,
-    padding: 15,
-    borderWidth: 1,
-    borderColor: '#334155',
-    marginBottom: 40
+  infoGrid: {
+    flexDirection: 'row',
+    gap: 10,
+    marginTop: 14,
   },
-  infoRow: { flexDirection: 'row', alignItems: 'center', paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: 'rgba(51, 65, 85, 0.5)' },
-  infoTextContainer: { marginLeft: 15 },
-  infoLabel: { color: '#94a3b8', fontSize: 11, marginBottom: 2, textTransform: 'uppercase' },
-  infoValue: { color: '#f8fafc', fontSize: 14, fontWeight: '500' }
+  metric: {
+    alignItems: 'center',
+    flex: 1,
+    gap: 6,
+    padding: 12,
+  },
+  metricValue: {
+    color: colors.text,
+    fontSize: 21,
+    fontWeight: '900',
+  },
+  metricLabel: {
+    color: colors.muted,
+    fontSize: 11,
+    fontWeight: '800',
+  },
+  detailsCard: {
+    gap: 12,
+    marginTop: 14,
+  },
+  infoRow: {
+    alignItems: 'center',
+    flexDirection: 'row',
+    gap: 10,
+  },
+  infoText: {
+    color: '#cbd5e1',
+    flex: 1,
+    fontSize: 13,
+  },
+  sectionHeader: {
+    marginTop: 22,
+    marginBottom: 10,
+  },
+  sectionTitle: {
+    color: colors.text,
+    fontSize: 18,
+    fontWeight: '900',
+  },
+  sectionSubtitle: {
+    color: colors.muted,
+    fontSize: 12,
+    marginTop: 2,
+  },
+  historyList: {
+    gap: 10,
+  },
+  transaction: {
+    alignItems: 'center',
+    flexDirection: 'row',
+    gap: 12,
+    justifyContent: 'space-between',
+  },
+  transactionText: {
+    flex: 1,
+  },
+  transactionTitle: {
+    color: colors.text,
+    fontSize: 13,
+    fontWeight: '800',
+  },
+  transactionDate: {
+    color: colors.muted,
+    fontSize: 11,
+    marginTop: 3,
+  },
+  amount: {
+    fontSize: 15,
+    fontWeight: '900',
+  },
+  amountPositive: {
+    color: colors.success,
+  },
+  amountNegative: {
+    color: '#fb7185',
+  },
+  emptyText: {
+    color: colors.muted,
+    textAlign: 'center',
+  },
 });

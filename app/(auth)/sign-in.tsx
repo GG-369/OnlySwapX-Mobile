@@ -1,86 +1,154 @@
-// app/(auth)/sign-in.tsx
-import React, { useState } from "react";
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, ActivityIndicator, Alert } from "react-native";
-import { useForm, Controller } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
-import { useAuth } from "../../src/lib/auth-context";
-import { Eye, EyeOff, Zap } from "lucide-react-native";
-import { useRouter } from "expo-router";
-
-const schema = z.object({
-  email: z.string().email("Ingresa un correo válido").toLowerCase(),
-  password: z.string().min(8, "Mínimo 8 caracteres"),
-});
+import React, { useState } from 'react';
+import { ActivityIndicator, Alert, KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { Link } from 'expo-router';
+import { useAuth } from '@/context/AuthContext';
+import { colors } from '@/components/ui';
+import { readableError } from '@/utils/format';
 
 export default function SignInScreen() {
-  const { signIn } = useAuth();
-  const router = useRouter();
-  const [showPass, setShowPass] = useState(false);
-  const [loading, setLoading] = useState(false);
+  const { login } = useAuth();
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [submitting, setSubmitting] = useState(false);
 
-  const { control, handleSubmit, formState: { errors } } = useForm({
-    resolver: zodResolver(schema),
-  });
+  const handleLogin = async () => {
+    if (!email.trim() || !password.trim()) {
+      Alert.alert('Campos obligatorios', 'Ingresa tu correo y contraseña.');
+      return;
+    }
 
-  const onSubmit = async (data: any) => {
-    setLoading(true);
+    setSubmitting(true);
     try {
-      await signIn(data.email, data.password);
-    } catch (err: any) {
-      Alert.alert("Error", err.message);
+      await login({ email: email.trim(), password });
+    } catch (error) {
+      Alert.alert('No se pudo iniciar sesión', readableError(error, 'Revisa tus credenciales e inténtalo nuevamente.'));
     } finally {
-      setLoading(false);
+      setSubmitting(false);
     }
   };
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Ingresar</Text>
-      
-      <Text style={styles.label}>Correo</Text>
-      <Controller
-        control={control}
-        name="email"
-        render={({ field: { onChange, value } }) => (
-          <TextInput style={styles.input} value={value} onChangeText={onChange} autoCapitalize="none" />
-        )}
-      />
-      {errors.email && <Text style={styles.error}>{errors.email.message as string}</Text>}
+    <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={styles.screen}>
+      <ScrollView contentContainerStyle={styles.container} keyboardShouldPersistTaps="handled">
+        <View style={styles.brand}>
+          <Text style={styles.logo}>OnlySwapX</Text>
+          <Text style={styles.subtitle}>Intercambia habilidades dentro de tu campus</Text>
+        </View>
 
-      <Text style={styles.label}>Contraseña</Text>
-      <View style={styles.passwordRow}>
-        <Controller
-          control={control}
-          name="password"
-          render={({ field: { onChange, value } }) => (
-            <TextInput 
-              style={{ flex: 1, color: '#fff' }} 
-              value={value} 
-              onChangeText={onChange} 
-              secureTextEntry={!showPass} 
-            />
-          )}
-        />
-        <TouchableOpacity onPress={() => setShowPass(!showPass)}>
-          {showPass ? <EyeOff color="#fff" size={20} /> : <Eye color="#fff" size={20} />}
-        </TouchableOpacity>
-      </View>
+        <View style={styles.form}>
+          <Text style={styles.label}>Correo electrónico</Text>
+          <TextInput
+            style={styles.input}
+            placeholder="tu@universidad.edu"
+            placeholderTextColor="#64748b"
+            value={email}
+            autoCapitalize="none"
+            keyboardType="email-address"
+            onChangeText={setEmail}
+          />
 
-      <TouchableOpacity style={styles.button} onPress={handleSubmit(onSubmit)} disabled={loading}>
-        {loading ? <ActivityIndicator color="#fff" /> : <Text style={styles.btnText}>Ingresar</Text>}
-      </TouchableOpacity>
-    </View>
+          <Text style={styles.label}>Contraseña</Text>
+          <TextInput
+            style={styles.input}
+            placeholder="Tu contraseña"
+            placeholderTextColor="#64748b"
+            value={password}
+            autoCapitalize="none"
+            secureTextEntry
+            onChangeText={setPassword}
+          />
+
+          <TouchableOpacity activeOpacity={0.85} style={[styles.primaryButton, submitting && styles.disabled]} onPress={handleLogin} disabled={submitting}>
+            {submitting ? <ActivityIndicator color={colors.background} /> : <Text style={styles.primaryText}>Iniciar sesión</Text>}
+          </TouchableOpacity>
+
+          <View style={styles.footer}>
+            <Text style={styles.footerText}>¿Nuevo en OnlySwapX?</Text>
+            <Link href="/(auth)/sign-up" style={styles.link}>Crear cuenta</Link>
+          </View>
+        </View>
+      </ScrollView>
+    </KeyboardAvoidingView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#0f172a', padding: 20, justifyContent: 'center' },
-  title: { color: '#fff', fontSize: 24, fontWeight: 'bold', marginBottom: 20 },
-  label: { color: '#cbd5e1', fontSize: 12, marginBottom: 5 },
-  input: { backgroundColor: '#1e293b', color: '#fff', padding: 12, borderRadius: 8, marginBottom: 10 },
-  passwordRow: { flexDirection: 'row', backgroundColor: '#1e293b', padding: 12, borderRadius: 8, alignItems: 'center' },
-  button: { backgroundColor: '#2563eb', padding: 15, borderRadius: 8, marginTop: 20, alignItems: 'center' },
-  btnText: { color: '#fff', fontWeight: 'bold' },
-  error: { color: '#ef4444', fontSize: 10, marginBottom: 10 }
+  screen: {
+    flex: 1,
+    backgroundColor: colors.background,
+  },
+  container: {
+    flexGrow: 1,
+    justifyContent: 'center',
+    padding: 24,
+  },
+  brand: {
+    marginBottom: 30,
+  },
+  logo: {
+    color: colors.text,
+    fontSize: 38,
+    fontWeight: '900',
+  },
+  subtitle: {
+    color: colors.muted,
+    fontSize: 15,
+    marginTop: 8,
+  },
+  form: {
+    backgroundColor: colors.card,
+    borderColor: colors.border,
+    borderRadius: 16,
+    borderWidth: 1,
+    padding: 20,
+  },
+  label: {
+    color: '#cbd5e1',
+    fontSize: 12,
+    fontWeight: '800',
+    marginBottom: 7,
+    marginTop: 14,
+    textTransform: 'uppercase',
+  },
+  input: {
+    backgroundColor: colors.background,
+    borderColor: colors.border,
+    borderRadius: 10,
+    borderWidth: 1,
+    color: colors.text,
+    fontSize: 15,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+  },
+  primaryButton: {
+    alignItems: 'center',
+    backgroundColor: colors.accent,
+    borderRadius: 10,
+    marginTop: 24,
+    padding: 14,
+  },
+  primaryText: {
+    color: colors.background,
+    fontSize: 15,
+    fontWeight: '900',
+  },
+  disabled: {
+    opacity: 0.65,
+  },
+  footer: {
+    alignItems: 'center',
+    flexDirection: 'row',
+    gap: 8,
+    justifyContent: 'center',
+    marginTop: 22,
+  },
+  footerText: {
+    color: colors.muted,
+    fontSize: 13,
+  },
+  link: {
+    color: colors.accent,
+    fontSize: 13,
+    fontWeight: '900',
+  },
 });

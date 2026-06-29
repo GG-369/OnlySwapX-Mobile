@@ -1,19 +1,63 @@
-import { Tabs, Redirect } from 'expo-router';
-import { useAuth } from '../../src/lib/auth-context';
-import { ActivityIndicator, View } from 'react-native';
-import { LayoutDashboard, Compass, User } from 'lucide-react-native';
+import React from 'react';
+import { Tabs } from 'expo-router';
+import { ArrowLeftRight, Calendar, Compass, Target, User } from 'lucide-react-native';
+import { colors } from '@/components/ui';
 
 export default function TabLayout() {
-  const { isAuthenticated, isLoading } = useAuth();
-
-  if (isLoading) return <View style={{flex:1, justifyContent:'center'}}><ActivityIndicator /></View>;
-  if (!isAuthenticated) return <Redirect href="/(auth)/sign-in" />;
-
   return (
-    <Tabs screenOptions={{ headerShown: false }}>
-      <Tabs.Screen name="index" options={{ title: 'Dashboard', tabBarIcon: ({color}) => <LayoutDashboard color={color} size={24} /> }} />
-      <Tabs.Screen name="explore" options={{ title: 'Explorar', tabBarIcon: ({color}) => <Compass color={color} size={24} /> }} />
-      <Tabs.Screen name="profile" options={{ title: 'Perfil', tabBarIcon: ({color}) => <User color={color} size={24} /> }} />
+    <Tabs
+      screenOptions={{
+        headerShown: false,
+        tabBarActiveTintColor: colors.accent,
+        tabBarInactiveTintColor: colors.muted,
+        tabBarStyle: {
+          backgroundColor: colors.card,
+          borderTopColor: colors.border,
+          height: 64,
+          paddingBottom: 8,
+          paddingTop: 6,
+        },
+        tabBarLabelStyle: {
+          fontSize: 10,
+          fontWeight: '800',
+        },
+      }}
+    >
+      <Tabs.Screen
+        name="index"
+        options={{
+          title: 'Descubrir',
+          tabBarIcon: ({ color }) => <Compass size={23} color={color} />,
+        }}
+      />
+      <Tabs.Screen
+        name="skills"
+        options={{
+          title: 'Skills',
+          tabBarIcon: ({ color }) => <Target size={23} color={color} />,
+        }}
+      />
+      <Tabs.Screen
+        name="exchanges"
+        options={{
+          title: 'Intercambios',
+          tabBarIcon: ({ color }) => <ArrowLeftRight size={23} color={color} />,
+        }}
+      />
+      <Tabs.Screen
+        name="sessions"
+        options={{
+          title: 'Sesiones',
+          tabBarIcon: ({ color }) => <Calendar size={23} color={color} />,
+        }}
+      />
+      <Tabs.Screen
+        name="profile"
+        options={{
+          title: 'Perfil',
+          tabBarIcon: ({ color }) => <User size={23} color={color} />,
+        }}
+      />
     </Tabs>
   );
 }

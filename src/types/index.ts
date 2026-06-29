@@ -1,9 +1,3 @@
-// ─── Auth ────────────────────────────────────────────────────────
-export interface SignInRequest {
-  email: string;
-  password: string;
-}
-
 export interface SignUpRequest {
   email: string;
   password: string;
@@ -12,16 +6,25 @@ export interface SignUpRequest {
   career?: string;
 }
 
+export interface SignInRequest {
+  email: string;
+  password: string;
+}
+
 export interface TokenResponse {
   token: string;
+  refreshToken: string;
   email: string;
   fullName: string;
   role: string;
   creditsBalance: number;
 }
 
-// ─── User ────────────────────────────────────────────────────────
-export interface UserResponse {
+export interface RefreshTokenRequest {
+  refreshToken: string;
+}
+
+export interface UserDetailResponse {
   id: number;
   email: string;
   fullName: string;
@@ -29,80 +32,121 @@ export interface UserResponse {
   career?: string;
   creditsBalance: number;
   role: string;
+  avatarUrl?: string;
+  academicHistoryUrl?: string;
+  campusName?: string;
+  latitude?: number;
+  longitude?: number;
 }
 
-// ─── Skill ───────────────────────────────────────────────────────
-export type SkillType = "OFFER" | "WANT";
-export type SkillCategory =
-  | "TECNOLOGIA"
-  | "CIENCIAS"
-  | "HUMANIDADES"
-  | "ARTE"
-  | "IDIOMAS"
-  | "NEGOCIOS"
-  | "OTRO";
-export type SkillLevel = "Básico" | "Intermedio" | "Avanzado";
+export interface UserSummaryResponse {
+  id: number;
+  fullName: string;
+  university?: string;
+  role: string;
+  campusName?: string;
+  latitude?: number;
+  longitude?: number;
+}
 
-export interface SkillRequest {
+export interface SkillCreateRequest {
   name: string;
   description?: string;
-  category?: SkillCategory;
-  skillType: SkillType;
-  level?: SkillLevel;
+  category?: string;
+  skillType: 'OFFER' | 'WANT';
+  level?: string;
 }
 
-export interface SkillResponse {
+export interface SkillUpdateRequest {
+  name?: string;
+  description?: string;
+  category?: string;
+  level?: string;
+}
+
+export interface SkillDetailResponse {
   id: number;
   userId: number;
+  userName: string;
   name: string;
   description?: string;
-  category?: SkillCategory;
-  skillType: SkillType;
-  level?: SkillLevel;
+  category?: string;
+  skillType: string;
+  level?: string;
+  ownerCampusName?: string;
+  ownerLatitude?: number;
+  ownerLongitude?: number;
 }
 
-export interface SkillWithUser extends SkillResponse {
-  user?: UserResponse;
+export interface SkillSummaryResponse {
+  id: number;
+  name: string;
+  skillType: string;
+  category?: string;
+  level?: string;
+  description?: string;
 }
 
-// ─── Exchange ────────────────────────────────────────────────────
-export type ExchangeStatus =
-  | "PENDING"
-  | "ACCEPTED"
-  | "REJECTED"
-  | "COMPLETED"
-  | "CANCELLED";
+export interface PageResponse<T> {
+  content: T[];
+  totalElements: number;
+  totalPages: number;
+  number?: number;
+  size?: number;
+  pageNumber?: number;
+  pageSize?: number;
+  last?: boolean;
+}
 
-export interface ExchangeResponse {
+export interface ExchangeCreateRequest {
+  receiverId: number;
+  skillId: number;
+  message?: string;
+}
+
+export interface ExchangeDetailResponse {
   id: number;
   requesterId: number;
   requesterName: string;
   receiverId: number;
   receiverName: string;
-  status: ExchangeStatus;
-  message: string;
+  status: string;
+  message?: string;
+  skillId?: number;
+  skillName?: string;
   createdAt: string;
 }
 
-// ─── Session ─────────────────────────────────────────────────────
-export type SessionStatus =
-  | "SCHEDULED"
-  | "TEACHER_CONFIRMED"
-  | "STUDENT_CONFIRMED"
-  | "COMPLETED"
-  | "CANCELLED";
+export interface ExchangeSummaryResponse {
+  id: number;
+  requesterId: number;
+  requesterName: string;
+  receiverId: number;
+  receiverName: string;
+  status: string;
+  skillId?: number;
+  skillName?: string;
+  createdAt: string;
+}
 
-export interface SessionRequest {
+export interface SessionCreateRequest {
   exchangeId: number;
-  teacherId: number;
-  studentId: number;
+  teacherId?: number;
+  studentId?: number;
   topic: string;
   scheduledAt: string;
   creditsAmount: number;
   durationMinutes?: number;
 }
 
-export interface SessionResponse {
+export interface SessionUpdateRequest {
+  topic?: string;
+  scheduledAt?: string;
+  creditsAmount?: number;
+  durationMinutes?: number;
+}
+
+export interface SessionDetailResponse {
   id: number;
   exchangeId: number;
   teacherId: number;
@@ -113,18 +157,33 @@ export interface SessionResponse {
   scheduledAt: string;
   durationMinutes: number;
   creditsAmount: number;
-  status: SessionStatus;
+  status: string;
   teacherConfirmed: boolean;
   studentConfirmed: boolean;
+  createdAt?: string;
 }
 
-// ─── Message ─────────────────────────────────────────────────────
-export type MessageType = "TEXT" | "SESSION_CARD" | "SYSTEM";
+export interface SessionSummaryResponse {
+  id: number;
+  exchangeId: number;
+  topic: string;
+  scheduledAt: string;
+  creditsAmount: number;
+  status: string;
+  createdByUserId: number;
+  confirmedByCurrentUser: boolean;
+  teacherId: number;
+  teacherName: string;
+  studentId: number;
+  studentName: string;
+  skillName: string;
+  hasReviewedByCurrentUser: boolean;
+}
 
 export interface MessageRequest {
   exchangeId: number;
   content: string;
-  messageType?: MessageType;
+  messageType?: 'TEXT' | 'AUDIO' | 'SYSTEM' | string;
 }
 
 export interface MessageResponse {
@@ -133,19 +192,18 @@ export interface MessageResponse {
   senderId: number;
   senderName: string;
   content: string;
-  messageType: MessageType;
+  messageType: 'TEXT' | 'AUDIO' | 'SYSTEM' | string;
   createdAt: string;
 }
 
-// ─── Review ──────────────────────────────────────────────────────
-export interface ReviewRequest {
+export interface ReviewCreateRequest {
   sessionId: number;
   reviewedId: number;
   rating: number;
   comment?: string;
 }
 
-export interface ReviewResponse {
+export interface ReviewDetailResponse {
   id: number;
   sessionId: number;
   reviewerId: number;
@@ -157,28 +215,84 @@ export interface ReviewResponse {
   createdAt: string;
 }
 
-// ─── Credits ─────────────────────────────────────────────────────
+export interface ReviewSummaryResponse {
+  id: number;
+  reviewerId: number;
+  reviewerName: string;
+  rating: number;
+  comment?: string;
+  roleContext?: string;
+}
+
+export interface RoleRatingStats {
+  average: number;
+  count: number;
+}
+
+export interface RoleRatingsResponse {
+  asTeacher: RoleRatingStats;
+  asStudent: RoleRatingStats;
+}
+
 export interface CreditBalanceResponse {
   userId: number;
   balance: number;
 }
 
-// ─── API Error ───────────────────────────────────────────────────
-export interface ApiError {
+export interface CreditTransactionResponse {
+  id: number;
+  type: string;
+  amount: number;
+  description?: string;
+  sessionId?: number;
+  sessionTopic?: string;
+  createdAt: string;
+}
+
+export interface OwnerRatingDTO {
+  average: number;
+  count: number;
+  role: 'TEACHER' | 'STUDENT';
+}
+
+export interface ExchangeCheckDTO {
+  exists: boolean;
+  reason?: string;
+  status?: string;
+}
+
+export interface DiscoverSkillDetails {
+  ownerRating: OwnerRatingDTO | null;
+  exchangeCheck: ExchangeCheckDTO | null;
+}
+
+export type DiscoverBatchResponse = Record<number, DiscoverSkillDetails>;
+
+export interface MatchSuggestedResponse {
+  skillId: number;
+  skillName: string;
+  skillDescription?: string;
+  category?: string;
+  skillType: string;
+  ownerId: number;
+  ownerName: string;
+  score: number;
+  ownerUniversity?: string;
+  ownerCampusName?: string;
+  ownerLatitude?: number;
+  ownerLongitude?: number;
+}
+
+export interface MatchResponse {
+  matchedUser: UserSummaryResponse;
+  suggestions: MatchSuggestedResponse[];
+  score: number;
+}
+
+export interface ErrorResponse {
   timestamp: string;
   status: number;
   error: string;
   message: string;
   path: string;
-}
-
-// ─── Auth Context ─────────────────────────────────────────────────
-export interface AuthUser {
-  id?: number;
-  email: string;
-  fullName: string;
-  role: string;
-  creditsBalance: number;
-  university?: string;  
-  career?: string;      
 }
