@@ -24,7 +24,7 @@ export function useProfilePhoto(userId?: number, remoteUrl?: string) {
   const pickFromGallery = useCallback(async () => {
     const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (!permission.granted) {
-      throw new Error('Permite acceso a tu galería para elegir una foto.');
+      throw new Error('Allow access to your gallery to choose a photo.');
     }
 
     setLoading(true);
@@ -47,7 +47,7 @@ export function useProfilePhoto(userId?: number, remoteUrl?: string) {
   const takePhoto = useCallback(async () => {
     const permission = await ImagePicker.requestCameraPermissionsAsync();
     if (!permission.granted) {
-      throw new Error('Permite acceso a la cámara para tomar una foto.');
+      throw new Error('Allow camera access to take a photo.');
     }
 
     setLoading(true);

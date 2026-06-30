@@ -6,7 +6,7 @@ export default function ModalScreen() {
   return (
     <View style={styles.container}>
       <Text style={styles.title}>OnlySwapX</Text>
-      <Text style={styles.subtitle}>Ruta auxiliar lista para futuros flujos modales.</Text>
+      <Text style={styles.subtitle}>Auxiliary route ready for future modal flows.</Text>
     </View>
   );
 }

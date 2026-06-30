@@ -4,7 +4,7 @@ import { Coordinates } from '@/utils/location';
 
 export function useDeviceLocation() {
   const [coordinates, setCoordinates] = useState<Coordinates | null>(null);
-  const [label, setLabel] = useState('Ubicación no activada');
+  const [label, setLabel] = useState('Location not enabled');
   const [permission, setPermission] = useState<'checking' | 'granted' | 'denied'>('checking');
   const [loading, setLoading] = useState(false);
 
@@ -14,7 +14,7 @@ export function useDeviceLocation() {
       const { status } = await Location.requestForegroundPermissionsAsync();
       if (status !== 'granted') {
         setPermission('denied');
-        setLabel('Permiso de ubicación denegado');
+        setLabel('Location permission denied');
         return;
       }
 
@@ -31,9 +31,9 @@ export function useDeviceLocation() {
       try {
         const [place] = await Location.reverseGeocodeAsync(next);
         const parts = [place?.name, place?.district, place?.city].filter(Boolean);
-        setLabel(parts.length > 0 ? parts.join(', ') : 'Ubicación actual detectada');
+        setLabel(parts.length > 0 ? parts.join(', ') : 'Current location detected');
       } catch {
-        setLabel('Ubicación actual detectada');
+        setLabel('Current location detected');
       }
     } finally {
       setLoading(false);

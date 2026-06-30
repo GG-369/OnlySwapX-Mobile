@@ -24,7 +24,7 @@ export default function ChatScreen() {
     try {
       setMessages(await messageService.getByExchange(exchangeId));
     } catch (error) {
-      if (!silent) Alert.alert('No se cargó el chat', readableError(error, 'Intenta nuevamente.'));
+      if (!silent) Alert.alert('Chat could not be loaded', readableError(error, 'Try again.'));
     } finally {
       setLoading(false);
     }
@@ -46,7 +46,7 @@ export default function ChatScreen() {
       setMessages((prev) => [...prev, sent]);
       setContent('');
     } catch (error) {
-      Alert.alert('No se envió el mensaje', readableError(error, 'Intenta nuevamente.'));
+      Alert.alert('Message could not be sent', readableError(error, 'Try again.'));
     } finally {
       setSending(false);
     }
@@ -62,7 +62,7 @@ export default function ChatScreen() {
         </TouchableOpacity>
         <View>
           <Text style={styles.title}>Exchange Chat</Text>
-          <Text style={styles.subtitle}>Mensajes del intercambio</Text>
+          <Text style={styles.subtitle}>Exchange messages</Text>
         </View>
       </View>
 
@@ -77,21 +77,21 @@ export default function ChatScreen() {
           return (
             <View style={[styles.messageRow, mine && styles.messageRowMine]}>
               <Card style={[styles.bubble, mine && styles.bubbleMine]}>
-                <Text style={styles.sender}>{mine ? 'Tú' : item.senderName}</Text>
+                <Text style={styles.sender}>{mine ? 'You' : item.senderName}</Text>
                 <Text style={styles.messageText}>{item.content}</Text>
                 <Text style={styles.messageDate}>{formatDate(item.createdAt)}</Text>
               </Card>
             </View>
           );
         }}
-        ListEmptyComponent={<Text style={styles.emptyText}>Aún no hay mensajes. Envía el primero.</Text>}
+        ListEmptyComponent={<Text style={styles.emptyText}>No messages yet. Send the first one.</Text>}
       />
 
       <View style={styles.composer}>
         <TextInput
           value={content}
           onChangeText={setContent}
-          placeholder="Escribe un mensaje..."
+          placeholder="Write a message..."
           placeholderTextColor="#64748b"
           style={styles.input}
         />

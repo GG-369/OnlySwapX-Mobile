@@ -32,7 +32,7 @@ export default function ProfileScreen() {
       if (historyRes.status === 'fulfilled') setHistory(historyRes.value);
       if (ratingsRes.status === 'fulfilled') setRatings(ratingsRes.value);
     } catch (error) {
-      Alert.alert('No se cargó tu perfil', readableError(error, 'Intenta nuevamente.'));
+      Alert.alert('Your profile could not be loaded', readableError(error, 'Try again.'));
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -50,7 +50,7 @@ export default function ProfileScreen() {
     try {
       await action();
     } catch (error) {
-      Alert.alert('No se pudo actualizar la foto', error instanceof Error ? error.message : 'Intenta nuevamente.');
+      Alert.alert('Could not update photo', error instanceof Error ? error.message : 'Try again.');
     }
   };
 
@@ -63,7 +63,7 @@ export default function ProfileScreen() {
       refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => { setRefreshing(true); load(); }} tintColor={colors.accent} />}
       showsVerticalScrollIndicator={false}
     >
-      <ScreenHeader title="Perfil" subtitle="Identidad, créditos y actividad" right={<Button label="Salir" icon={LogOut} variant="secondary" onPress={logout} />} />
+      <ScreenHeader title="Profile" subtitle="Identity, credits, and activity" right={<Button label="Log out" icon={LogOut} variant="secondary" onPress={logout} />} />
 
       <Card style={styles.profileCard}>
         <View style={styles.avatarWrap}>
@@ -74,15 +74,15 @@ export default function ProfileScreen() {
               <Text style={styles.avatarText}>{initialsOf(user?.fullName)}</Text>
             </View>
           )}
-          <Badge tone="accent">Verificado</Badge>
+          <Badge tone="accent">Verified</Badge>
         </View>
 
         <Text style={styles.name}>{user?.fullName}</Text>
         <Text style={styles.email}>{user?.email}</Text>
 
         <View style={styles.photoActions}>
-          <Button label="Cámara" icon={Camera} variant="secondary" onPress={() => runPhotoAction(photo.takePhoto)} loading={photo.loading} />
-          <Button label="Galería" icon={ImageIcon} variant="secondary" onPress={() => runPhotoAction(photo.pickFromGallery)} loading={photo.loading} />
+          <Button label="Camera" icon={Camera} variant="secondary" onPress={() => runPhotoAction(photo.takePhoto)} loading={photo.loading} />
+          <Button label="Gallery" icon={ImageIcon} variant="secondary" onPress={() => runPhotoAction(photo.pickFromGallery)} loading={photo.loading} />
         </View>
       </Card>
 
@@ -90,53 +90,53 @@ export default function ProfileScreen() {
         <Card style={styles.metric}>
           <Coins size={20} color={colors.accent} />
           <Text style={styles.metricValue}>{user?.creditsBalance ?? 0}</Text>
-          <Text style={styles.metricLabel}>Créditos</Text>
+          <Text style={styles.metricLabel}>Credits</Text>
         </Card>
         <Card style={styles.metric}>
           <BookOpen size={20} color={colors.accent} />
           <Text style={styles.metricValue}>{offerCount}</Text>
-          <Text style={styles.metricLabel}>Ofrezco</Text>
+          <Text style={styles.metricLabel}>Offering</Text>
         </Card>
         <Card style={styles.metric}>
           <ShieldCheck size={20} color={colors.accent} />
           <Text style={styles.metricValue}>{wantCount}</Text>
-          <Text style={styles.metricLabel}>Busco</Text>
+          <Text style={styles.metricLabel}>Looking for</Text>
         </Card>
       </View>
 
       <Card style={styles.detailsCard}>
         {user?.university ? <InfoRow icon={GraduationCap} text={user.university} /> : null}
         {user?.career ? <InfoRow icon={Briefcase} text={user.career} /> : null}
-        <InfoRow icon={Mail} text={user?.email || 'Sin correo'} />
+        <InfoRow icon={Mail} text={user?.email || 'No email'} />
       </Card>
 
       <View style={styles.sectionHeader}>
-        <Text style={styles.sectionTitle}>Puntaje de reseñas</Text>
-        <Text style={styles.sectionSubtitle}>Promedio recibido como teacher y student</Text>
+        <Text style={styles.sectionTitle}>Review score</Text>
+        <Text style={styles.sectionSubtitle}>Average received as teacher and student</Text>
       </View>
 
       <View style={styles.ratingGrid}>
         <Card style={styles.ratingCard}>
           <Star size={20} color={colors.accent} fill={colors.accent} />
           <Text style={styles.ratingValue}>{(ratings?.asTeacher?.average ?? 0).toFixed(1)}</Text>
-          <Text style={styles.ratingLabel}>Como teacher · {ratings?.asTeacher?.count ?? 0} reseña(s)</Text>
+          <Text style={styles.ratingLabel}>As teacher · {ratings?.asTeacher?.count ?? 0} review(s)</Text>
         </Card>
         <Card style={styles.ratingCard}>
           <Star size={20} color={colors.accent} fill={colors.accent} />
           <Text style={styles.ratingValue}>{(ratings?.asStudent?.average ?? 0).toFixed(1)}</Text>
-          <Text style={styles.ratingLabel}>Como student · {ratings?.asStudent?.count ?? 0} reseña(s)</Text>
+          <Text style={styles.ratingLabel}>As student · {ratings?.asStudent?.count ?? 0} review(s)</Text>
         </Card>
       </View>
 
       <View style={styles.sectionHeader}>
-        <Text style={styles.sectionTitle}>Actividad de créditos</Text>
-        <Text style={styles.sectionSubtitle}>Últimas transacciones</Text>
+        <Text style={styles.sectionTitle}>Credit activity</Text>
+        <Text style={styles.sectionSubtitle}>Latest transactions</Text>
       </View>
 
       <View style={styles.historyList}>
         {history.length === 0 ? (
           <Card>
-            <Text style={styles.emptyText}>Aún no tienes movimientos de créditos.</Text>
+            <Text style={styles.emptyText}>You don&apos;t have any credit movements yet.</Text>
           </Card>
         ) : history.slice(0, 8).map((tx) => (
           <Card key={tx.id} style={styles.transaction}>

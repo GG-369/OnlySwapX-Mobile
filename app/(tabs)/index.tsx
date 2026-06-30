@@ -52,7 +52,7 @@ export default function DiscoverScreen() {
       if (skillsRes.status === 'fulfilled') setPageData(skillsRes.value);
       if (suggestedRes.status === 'fulfilled') setSuggested(suggestedRes.value);
     } catch (error) {
-      Alert.alert('No se pudo cargar Discover', readableError(error, 'Intenta refrescar la pantalla.'));
+      Alert.alert('Could not load Discover', readableError(error, 'Try refreshing the screen.'));
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -74,20 +74,20 @@ export default function DiscoverScreen() {
 
   const openProposal = async (skill: SkillDetailResponse) => {
     if (skill.userId === user?.id) {
-      Alert.alert('Intercambio inválido', 'No puedes proponerte un intercambio a ti mismo.');
+      Alert.alert('Invalid exchange', "You can't propose an exchange to yourself.");
       return;
     }
 
     try {
       const check = await exchangeService.checkExisting(skill.userId, skill.id);
       if (check.exists) {
-        Alert.alert('Intercambio existente', check.status ? `Ya tienes un intercambio ${check.status} con esta persona.` : 'Ya existe una propuesta activa.');
+        Alert.alert('Existing exchange', check.status ? `You already have a ${check.status} exchange with this person.` : 'An active proposal already exists.');
         return;
       }
       setProposalSkill(skill);
-      setProposalMessage(`Hola, me interesa intercambiar por ${skill.name}. ¿Te gustaría coordinar?`);
+      setProposalMessage(`Hi, I'm interested in exchanging for ${skill.name}. Would you like to coordinate?`);
     } catch (error) {
-      Alert.alert('No se pudo validar', readableError(error, 'Inténtalo nuevamente.'));
+      Alert.alert('Could not validate', readableError(error, 'Please try again.'));
     }
   };
 
@@ -95,7 +95,7 @@ export default function DiscoverScreen() {
     if (!proposalSkill || proposalLoading) return;
     const message = proposalMessage.trim();
     if (!message) {
-      Alert.alert('Mensaje requerido', 'Escribe un mensaje breve para la propuesta.');
+      Alert.alert('Message required', 'Write a brief message for the proposal.');
       return;
     }
 
@@ -108,10 +108,10 @@ export default function DiscoverScreen() {
       });
       setProposalSkill(null);
       setProposalMessage('');
-      Alert.alert('Propuesta enviada', 'Tu intercambio fue creado correctamente.');
+      Alert.alert('Proposal sent', 'Your exchange was created successfully.');
       load();
     } catch (error) {
-      Alert.alert('No se pudo proponer', readableError(error, 'Inténtalo nuevamente.'));
+      Alert.alert('Could not propose', readableError(error, 'Please try again.'));
     } finally {
       setProposalLoading(false);
     }
@@ -137,8 +137,8 @@ export default function DiscoverScreen() {
     >
       <ScreenHeader
         title="Discover"
-        subtitle="Skills cercanos y recomendaciones para intercambiar"
-        right={<Badge tone="accent">{user?.creditsBalance ?? 0} créditos</Badge>}
+        subtitle="Nearby skills and recommendations to exchange"
+        right={<Badge tone="accent">{user?.creditsBalance ?? 0} credits</Badge>}
       />
 
       <Card style={styles.locationCard}>
@@ -147,23 +147,23 @@ export default function DiscoverScreen() {
             <LocateFixed size={20} color={colors.accent} />
           </View>
           <View style={styles.locationText}>
-            <Text style={styles.locationTitle}>Proximidad activa</Text>
+            <Text style={styles.locationTitle}>Active proximity</Text>
             <Text style={styles.locationSubtitle}>{location.label}</Text>
           </View>
         </View>
         <Text style={styles.locationHint}>
           {location.permission === 'denied'
-            ? 'Activa permisos para ordenar resultados por cercanía real.'
-            : `Campus base: ${currentCampus?.name || 'se estimará cuando el backend devuelva campus'}.`}
+            ? 'Enable permissions to sort results by real proximity.'
+            : `Base campus: ${currentCampus?.name || 'will be estimated once the backend returns campus'}.`}
         </Text>
-        <Button label={location.loading ? 'Ubicando...' : 'Actualizar GPS'} variant="secondary" onPress={location.requestLocation} loading={location.loading} />
+        <Button label={location.loading ? 'Locating...' : 'Update GPS'} variant="secondary" onPress={location.requestLocation} loading={location.loading} />
       </Card>
 
       {suggested.length > 0 ? (
         <View style={styles.section}>
           <View style={styles.sectionTitleRow}>
             <Brain size={18} color={colors.accent} />
-            <Text style={styles.sectionTitle}>Sugerido para ti</Text>
+            <Text style={styles.sectionTitle}>Suggested for you</Text>
           </View>
           <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.suggestedRow}>
             {suggested.slice(0, 6).map((item) => (
@@ -183,7 +183,7 @@ export default function DiscoverScreen() {
         <TextInput
           value={search}
           onChangeText={(value) => { setSearch(value); setPage(0); }}
-          placeholder="Buscar skills..."
+          placeholder="Search skills..."
           placeholderTextColor="#64748b"
           style={styles.searchInput}
         />
@@ -192,7 +192,7 @@ export default function DiscoverScreen() {
       <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.filters}>
         <TouchableOpacity style={[styles.filterChip, !category && styles.filterActive]} onPress={() => { setCategory(''); setPage(0); }}>
           <Filter size={13} color={!category ? colors.background : colors.muted} />
-          <Text style={[styles.filterText, !category && styles.filterTextActive]}>Todo</Text>
+          <Text style={[styles.filterText, !category && styles.filterTextActive]}>All</Text>
         </TouchableOpacity>
         {CATEGORIES.map((item) => (
           <TouchableOpacity key={item} style={[styles.filterChip, category === item && styles.filterActive]} onPress={() => { setCategory(item); setPage(0); }}>
@@ -202,7 +202,7 @@ export default function DiscoverScreen() {
       </ScrollView>
 
       {skills.length === 0 ? (
-        <EmptyState icon={Sparkles} title="No hay skills disponibles" subtitle="Prueba otra búsqueda o agrega tus propios intereses." />
+        <EmptyState icon={Sparkles} title="No skills available" subtitle="Try another search or add your own interests." />
       ) : (
         <View style={styles.list}>
           {skills.map((skill) => {
@@ -224,29 +224,29 @@ export default function DiscoverScreen() {
 
       {pageData && pageData.totalPages > 1 ? (
         <View style={styles.pagination}>
-          <Button label="Anterior" variant="secondary" disabled={page === 0} onPress={() => setPage((value) => Math.max(0, value - 1))} />
-          <Text style={styles.pageText}>Página {page + 1} de {pageData.totalPages}</Text>
-          <Button label="Siguiente" variant="secondary" disabled={page >= pageData.totalPages - 1} onPress={() => setPage((value) => value + 1)} />
+          <Button label="Previous" variant="secondary" disabled={page === 0} onPress={() => setPage((value) => Math.max(0, value - 1))} />
+          <Text style={styles.pageText}>Page {page + 1} of {pageData.totalPages}</Text>
+          <Button label="Next" variant="secondary" disabled={page >= pageData.totalPages - 1} onPress={() => setPage((value) => value + 1)} />
         </View>
       ) : null}
 
       <Modal visible={!!proposalSkill} transparent animationType="fade" onRequestClose={() => setProposalSkill(null)}>
         <View style={styles.modalBackdrop}>
           <Card style={styles.proposalModal}>
-            <Text style={styles.modalTitle}>Proponer intercambio</Text>
+            <Text style={styles.modalTitle}>Propose exchange</Text>
             <Text style={styles.modalSubtitle}>{proposalSkill?.name}</Text>
-            <Text style={styles.inputLabel}>Mensaje</Text>
+            <Text style={styles.inputLabel}>Message</Text>
             <TextInput
               value={proposalMessage}
               onChangeText={setProposalMessage}
               multiline
               style={[styles.textInput, styles.messageInput]}
-              placeholder="Escribe por qué quieres hacer este intercambio..."
+              placeholder="Write why you want to make this exchange..."
               placeholderTextColor="#64748b"
             />
             <View style={styles.modalActions}>
-              <Button label="Cancelar" variant="secondary" onPress={() => setProposalSkill(null)} disabled={proposalLoading} />
-              <Button label="Enviar propuesta" onPress={sendProposal} loading={proposalLoading} />
+              <Button label="Cancel" variant="secondary" onPress={() => setProposalSkill(null)} disabled={proposalLoading} />
+              <Button label="Send proposal" onPress={sendProposal} loading={proposalLoading} />
             </View>
           </Card>
         </View>

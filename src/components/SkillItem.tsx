@@ -7,12 +7,12 @@ import { formatDistance } from '@/utils/format';
 
 const skillLevelLabel = (level?: string) => {
   const labels: Record<string, string> = {
-    BEGINNER: 'Básico',
-    BASICO: 'Básico',
-    INTERMEDIATE: 'Intermedio',
-    INTERMEDIO: 'Intermedio',
-    ADVANCED: 'Avanzado',
-    AVANZADO: 'Avanzado',
+    BEGINNER: 'Beginner',
+    BASICO: 'Beginner',
+    INTERMEDIATE: 'Intermediate',
+    INTERMEDIO: 'Intermediate',
+    ADVANCED: 'Advanced',
+    AVANZADO: 'Advanced',
   };
 
   return labels[level || ''] || level;
@@ -41,7 +41,7 @@ export function SkillItem({ skill, ownerName, rating, distanceMeters, campusName
             {ownerName ? <Text style={styles.owner} numberOfLines={1}>{ownerName}</Text> : null}
           </View>
           <Badge tone={skill.skillType === 'OFFER' ? 'accent' : 'blue'}>
-            {skill.skillType === 'OFFER' ? 'Ofrece' : 'Busca'}
+            {skill.skillType === 'OFFER' ? 'Offers' : 'Wants'}
           </Badge>
         </View>
 
@@ -69,11 +69,11 @@ export function SkillItem({ skill, ownerName, rating, distanceMeters, campusName
 
         {isOwner ? (
           <View style={styles.actions}>
-            {onEdit ? <Button label="Editar" variant="secondary" onPress={onEdit} /> : null}
-            {onDelete ? <Button label="Eliminar" variant="danger" onPress={onDelete} /> : null}
+            {onEdit ? <Button label="Edit" variant="secondary" onPress={onEdit} /> : null}
+            {onDelete ? <Button label="Delete" variant="danger" onPress={onDelete} /> : null}
           </View>
         ) : onPropose ? (
-          <Button label="Proponer intercambio" icon={ArrowLeftRight} onPress={onPropose} />
+          <Button label="Propose exchange" icon={ArrowLeftRight} onPress={onPropose} />
         ) : null}
       </Card>
     </TouchableOpacity>

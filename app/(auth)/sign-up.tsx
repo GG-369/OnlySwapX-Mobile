@@ -16,7 +16,7 @@ export default function SignUpScreen() {
 
   const handleSignUp = async () => {
     if (!fullName.trim() || !email.trim() || password.length < 6) {
-      Alert.alert('Datos incompletos', 'Completa nombre, correo y una contraseña de al menos 6 caracteres.');
+      Alert.alert('Incomplete data', 'Fill in name, email, and a password of at least 6 characters.');
       return;
     }
 
@@ -30,7 +30,7 @@ export default function SignUpScreen() {
         career: career.trim() || undefined,
       });
     } catch (error) {
-      Alert.alert('No se pudo crear la cuenta', readableError(error, 'Verifica los datos e inténtalo nuevamente.'));
+      Alert.alert('Could not create account', readableError(error, 'Check your details and try again.'));
     } finally {
       setSubmitting(false);
     }
@@ -41,32 +41,32 @@ export default function SignUpScreen() {
       <ScrollView contentContainerStyle={styles.container} keyboardShouldPersistTaps="handled">
         <View style={styles.brand}>
           <Text style={styles.logo}>OnlySwapX</Text>
-          <Text style={styles.subtitle}>Crea tu perfil de intercambio académico</Text>
+          <Text style={styles.subtitle}>Create your academic exchange profile</Text>
         </View>
 
         <View style={styles.form}>
-          <Text style={styles.label}>Nombre completo</Text>
-          <TextInput style={styles.input} placeholder="Tu nombre" placeholderTextColor="#64748b" value={fullName} onChangeText={setFullName} />
+          <Text style={styles.label}>Full name</Text>
+          <TextInput style={styles.input} placeholder="Your name" placeholderTextColor="#64748b" value={fullName} onChangeText={setFullName} />
 
-          <Text style={styles.label}>Correo electrónico</Text>
-          <TextInput style={styles.input} placeholder="alumno@utec.edu.pe" placeholderTextColor="#64748b" value={email} autoCapitalize="none" keyboardType="email-address" onChangeText={setEmail} />
+          <Text style={styles.label}>Email</Text>
+          <TextInput style={styles.input} placeholder="student@utec.edu.pe" placeholderTextColor="#64748b" value={email} autoCapitalize="none" keyboardType="email-address" onChangeText={setEmail} />
 
-          <Text style={styles.label}>Contraseña</Text>
-          <TextInput style={styles.input} placeholder="Mínimo 6 caracteres" placeholderTextColor="#64748b" value={password} autoCapitalize="none" secureTextEntry onChangeText={setPassword} />
+          <Text style={styles.label}>Password</Text>
+          <TextInput style={styles.input} placeholder="Minimum 6 characters" placeholderTextColor="#64748b" value={password} autoCapitalize="none" secureTextEntry onChangeText={setPassword} />
 
-          <Text style={styles.label}>Universidad</Text>
+          <Text style={styles.label}>University</Text>
           <TextInput style={styles.input} placeholder="UTEC, UNI, PUCP..." placeholderTextColor="#64748b" value={university} onChangeText={setUniversity} />
 
-          <Text style={styles.label}>Carrera</Text>
-          <TextInput style={styles.input} placeholder="Ciencia de la Computación" placeholderTextColor="#64748b" value={career} onChangeText={setCareer} />
+          <Text style={styles.label}>Major</Text>
+          <TextInput style={styles.input} placeholder="Computer Science" placeholderTextColor="#64748b" value={career} onChangeText={setCareer} />
 
           <TouchableOpacity activeOpacity={0.85} style={[styles.primaryButton, submitting && styles.disabled]} onPress={handleSignUp} disabled={submitting}>
-            {submitting ? <ActivityIndicator color={colors.background} /> : <Text style={styles.primaryText}>Crear cuenta</Text>}
+            {submitting ? <ActivityIndicator color={colors.background} /> : <Text style={styles.primaryText}>Create account</Text>}
           </TouchableOpacity>
 
           <View style={styles.footer}>
-            <Text style={styles.footerText}>¿Ya tienes cuenta?</Text>
-            <Link href="/(auth)/sign-in" style={styles.link}>Inicia sesión</Link>
+            <Text style={styles.footerText}>Already have an account?</Text>
+            <Link href="/(auth)/sign-in" style={styles.link}>Sign in</Link>
           </View>
         </View>
       </ScrollView>

@@ -41,7 +41,7 @@ export default function ExchangesScreen() {
     try {
       setExchanges(await exchangeService.getMyExchanges());
     } catch (error) {
-      Alert.alert('No se cargaron los intercambios', readableError(error, 'Intenta nuevamente.'));
+      Alert.alert('Exchanges could not be loaded', readableError(error, 'Try again.'));
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -61,22 +61,22 @@ export default function ExchangesScreen() {
       await exchangeService.accept(id);
       load();
     } catch (error) {
-      Alert.alert('No se pudo aceptar', readableError(error, 'Intenta nuevamente.'));
+      Alert.alert('Could not accept', readableError(error, 'Try again.'));
     }
   };
 
   const reject = (id: number) => {
-    Alert.alert('Rechazar intercambio', '¿Seguro que quieres rechazar esta propuesta?', [
-      { text: 'Cancelar', style: 'cancel' },
+    Alert.alert('Reject exchange', 'Are you sure you want to reject this proposal?', [
+      { text: 'Cancel', style: 'cancel' },
       {
-        text: 'Rechazar',
+        text: 'Reject',
         style: 'destructive',
         onPress: async () => {
           try {
             await exchangeService.reject(id);
             load();
           } catch (error) {
-            Alert.alert('No se pudo rechazar', readableError(error, 'Intenta nuevamente.'));
+            Alert.alert('Could not reject', readableError(error, 'Try again.'));
           }
         },
       },
@@ -84,17 +84,17 @@ export default function ExchangesScreen() {
   };
 
   const end = (id: number) => {
-    Alert.alert('Finalizar intercambio', 'Las sesiones y reseñas existentes se mantendrán visibles.', [
-      { text: 'Cancelar', style: 'cancel' },
+    Alert.alert('End exchange', 'Existing sessions and reviews will remain visible.', [
+      { text: 'Cancel', style: 'cancel' },
       {
-        text: 'Finalizar',
+        text: 'End',
         style: 'destructive',
         onPress: async () => {
           try {
             await exchangeService.end(id);
             load();
           } catch (error) {
-            Alert.alert('No se pudo finalizar', readableError(error, 'Intenta nuevamente.'));
+            Alert.alert('Could not end', readableError(error, 'Try again.'));
           }
         },
       },
@@ -104,7 +104,7 @@ export default function ExchangesScreen() {
   const openSchedule = (exchange: ExchangeSummaryResponse) => {
     const tomorrow = new Date(Date.now() + 24 * 60 * 60 * 1000);
     setScheduleExchange(exchange);
-    setTopic(exchange.skillName || `Intercambio #${exchange.id}`);
+    setTopic(exchange.skillName || `Exchange #${exchange.id}`);
     setScheduledAt(toDateInput(tomorrow));
     setCreditsAmount('1');
     setDurationMinutes('45');
@@ -117,19 +117,19 @@ export default function ExchangesScreen() {
     const when = sanitizeDateTime(scheduledAt);
 
     if (!topic.trim()) {
-      Alert.alert('Tema requerido', 'Escribe el tema de la sesión.');
+      Alert.alert('Topic required', 'Enter the session topic.');
       return;
     }
     if (!when || Number.isNaN(Date.parse(when))) {
-      Alert.alert('Fecha inválida', 'Usa el formato YYYY-MM-DDTHH:mm, por ejemplo 2026-06-30T18:00.');
+      Alert.alert('Invalid date', 'Use the YYYY-MM-DDTHH:mm format, for example 2026-06-30T18:00.');
       return;
     }
     if (!Number.isFinite(credits) || credits < 1) {
-      Alert.alert('Créditos inválidos', 'La sesión debe costar al menos 1 crédito.');
+      Alert.alert('Invalid credits', 'The session must cost at least 1 credit.');
       return;
     }
     if (!Number.isFinite(duration) || duration < 15) {
-      Alert.alert('Duración inválida', 'La duración mínima recomendada es 15 minutos.');
+      Alert.alert('Invalid duration', 'The recommended minimum duration is 15 minutes.');
       return;
     }
 
@@ -144,9 +144,9 @@ export default function ExchangesScreen() {
       });
       await refreshUser();
       setScheduleExchange(null);
-      Alert.alert('Sesión propuesta', 'La sesión fue enviada para aprobación.');
+      Alert.alert('Session proposed', 'The session was sent for approval.');
     } catch (error) {
-      Alert.alert('No se pudo crear sesión', readableError(error, 'Intenta nuevamente.'));
+      Alert.alert('Could not create session', readableError(error, 'Try again.'));
     } finally {
       setCreatingSession(false);
     }
@@ -161,18 +161,18 @@ export default function ExchangesScreen() {
       refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => { setRefreshing(true); load(); }} tintColor={colors.accent} />}
       showsVerticalScrollIndicator={false}
     >
-      <ScreenHeader title="Intercambios" subtitle="Acepta propuestas, agenda sesiones y abre chats" />
+      <ScreenHeader title="Exchanges" subtitle="Accept proposals, schedule sessions, and open chats" />
 
       <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.filters}>
         {FILTERS.map((item) => (
           <TouchableOpacity key={item} style={[styles.filter, filter === item && styles.filterActive]} onPress={() => setFilter(item)}>
-            <Text style={[styles.filterText, filter === item && styles.filterTextActive]}>{item === 'ALL' ? 'Todo' : statusLabel(item)}</Text>
+            <Text style={[styles.filterText, filter === item && styles.filterTextActive]}>{item === 'ALL' ? 'All' : statusLabel(item)}</Text>
           </TouchableOpacity>
         ))}
       </ScrollView>
 
       {filtered.length === 0 ? (
-        <EmptyState icon={ArrowLeftRight} title="Sin intercambios" subtitle="Propón un intercambio desde Discover para iniciar una conversación." />
+        <EmptyState icon={ArrowLeftRight} title="No exchanges" subtitle="Propose an exchange from Discover to start a conversation." />
       ) : (
         <View style={styles.list}>
           {filtered.map((exchange) => {
@@ -183,27 +183,27 @@ export default function ExchangesScreen() {
                 <View style={styles.cardTop}>
                   <View style={styles.cardTitleArea}>
                     <Text style={styles.name} numberOfLines={1}>{otherName}</Text>
-                    <Text style={styles.meta}>{exchange.skillName || `Intercambio #${exchange.id}`}</Text>
+                    <Text style={styles.meta}>{exchange.skillName || `Exchange #${exchange.id}`}</Text>
                   </View>
                   <Badge tone={exchange.status === 'ACCEPTED' ? 'success' : exchange.status === 'REJECTED' ? 'danger' : 'neutral'}>
                     {statusLabel(exchange.status)}
                   </Badge>
                 </View>
 
-                <Text style={styles.date}>Creado: {formatDate(exchange.createdAt)}</Text>
+                <Text style={styles.date}>Created: {formatDate(exchange.createdAt)}</Text>
 
                 <View style={styles.actions}>
                   <Button label="Chat" icon={MessageCircle} variant="secondary" onPress={() => router.push({ pathname: '/exchanges/[id]/chat', params: { id: String(exchange.id) } })} />
                   {exchange.status === 'PENDING' && isReceiver ? (
                     <>
-                      <Button label="Aceptar" onPress={() => accept(exchange.id)} />
-                      <Button label="Rechazar" icon={XCircle} variant="danger" onPress={() => reject(exchange.id)} />
+                      <Button label="Accept" onPress={() => accept(exchange.id)} />
+                      <Button label="Reject" icon={XCircle} variant="danger" onPress={() => reject(exchange.id)} />
                     </>
                   ) : null}
                   {exchange.status === 'ACCEPTED' ? (
                     <>
-                      <Button label="Agendar" icon={CalendarPlus} onPress={() => openSchedule(exchange)} />
-                      <Button label="Finalizar" variant="danger" onPress={() => end(exchange.id)} />
+                      <Button label="Schedule" icon={CalendarPlus} onPress={() => openSchedule(exchange)} />
+                      <Button label="End" variant="danger" onPress={() => end(exchange.id)} />
                     </>
                   ) : null}
                 </View>
@@ -216,29 +216,29 @@ export default function ExchangesScreen() {
       <Modal visible={!!scheduleExchange} transparent animationType="fade" onRequestClose={() => setScheduleExchange(null)}>
         <View style={styles.modalBackdrop}>
           <Card style={styles.modalCard}>
-            <Text style={styles.modalTitle}>Agendar sesión</Text>
-            <Text style={styles.modalSubtitle}>{scheduleExchange?.skillName || `Intercambio #${scheduleExchange?.id}`}</Text>
+            <Text style={styles.modalTitle}>Schedule session</Text>
+            <Text style={styles.modalSubtitle}>{scheduleExchange?.skillName || `Exchange #${scheduleExchange?.id}`}</Text>
 
-            <Text style={styles.inputLabel}>Tema</Text>
-            <TextInput value={topic} onChangeText={setTopic} style={styles.input} placeholder="Tema de la sesión" placeholderTextColor="#64748b" />
+            <Text style={styles.inputLabel}>Topic</Text>
+            <TextInput value={topic} onChangeText={setTopic} style={styles.input} placeholder="Session topic" placeholderTextColor="#64748b" />
 
-            <Text style={styles.inputLabel}>Fecha y hora</Text>
+            <Text style={styles.inputLabel}>Date and time</Text>
             <TextInput value={scheduledAt} onChangeText={setScheduledAt} style={styles.input} placeholder="2026-06-30T18:00" placeholderTextColor="#64748b" autoCapitalize="none" />
 
             <View style={styles.inputRow}>
               <View style={styles.inputHalf}>
-                <Text style={styles.inputLabel}>Créditos</Text>
+                <Text style={styles.inputLabel}>Credits</Text>
                 <TextInput value={creditsAmount} onChangeText={setCreditsAmount} style={styles.input} keyboardType="number-pad" />
               </View>
               <View style={styles.inputHalf}>
-                <Text style={styles.inputLabel}>Minutos</Text>
+                <Text style={styles.inputLabel}>Minutes</Text>
                 <TextInput value={durationMinutes} onChangeText={setDurationMinutes} style={styles.input} keyboardType="number-pad" />
               </View>
             </View>
 
             <View style={styles.modalActions}>
-              <Button label="Cancelar" variant="secondary" onPress={() => setScheduleExchange(null)} disabled={creatingSession} />
-              <Button label="Proponer sesión" onPress={createSession} loading={creatingSession} />
+              <Button label="Cancel" variant="secondary" onPress={() => setScheduleExchange(null)} disabled={creatingSession} />
+              <Button label="Propose session" onPress={createSession} loading={creatingSession} />
             </View>
           </Card>
         </View>

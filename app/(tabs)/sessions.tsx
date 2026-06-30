@@ -27,7 +27,7 @@ export default function SessionsScreen() {
     try {
       setSessions(await sessionService.getMySessions());
     } catch (error) {
-      Alert.alert('No se cargaron las sesiones', readableError(error, 'Intenta nuevamente.'));
+      Alert.alert('Sessions could not be loaded', readableError(error, 'Try again.'));
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -48,7 +48,7 @@ export default function SessionsScreen() {
       await refreshUser();
       load();
     } catch (error) {
-      Alert.alert('No se pudo aceptar', readableError(error, 'Intenta nuevamente.'));
+      Alert.alert('Could not accept', readableError(error, 'Try again.'));
     }
   };
 
@@ -57,7 +57,7 @@ export default function SessionsScreen() {
       await sessionService.reject(id);
       load();
     } catch (error) {
-      Alert.alert('No se pudo rechazar', readableError(error, 'Intenta nuevamente.'));
+      Alert.alert('Could not reject', readableError(error, 'Try again.'));
     }
   };
 
@@ -67,15 +67,15 @@ export default function SessionsScreen() {
       await refreshUser();
       load();
     } catch (error) {
-      Alert.alert('No se pudo confirmar', readableError(error, 'Intenta nuevamente.'));
+      Alert.alert('Could not confirm', readableError(error, 'Try again.'));
     }
   };
 
   const cancel = (id: number) => {
-    Alert.alert('Cancelar sesión', 'Los créditos retenidos se devolverán si aplica.', [
+    Alert.alert('Cancel session', 'Held credits will be refunded if applicable.', [
       { text: 'No', style: 'cancel' },
       {
-        text: 'Cancelar sesión',
+        text: 'Cancel session',
         style: 'destructive',
         onPress: async () => {
           try {
@@ -83,7 +83,7 @@ export default function SessionsScreen() {
             await refreshUser();
             load();
           } catch (error) {
-            Alert.alert('No se pudo cancelar', readableError(error, 'Intenta nuevamente.'));
+            Alert.alert('Could not cancel', readableError(error, 'Try again.'));
           }
         },
       },
@@ -111,7 +111,7 @@ export default function SessionsScreen() {
       setReviewSession(null);
       load();
     } catch (error) {
-      Alert.alert('No se pudo crear reseña', readableError(error, 'Intenta nuevamente.'));
+      Alert.alert('Could not create review', readableError(error, 'Try again.'));
     } finally {
       setReviewing(false);
     }
@@ -126,18 +126,18 @@ export default function SessionsScreen() {
       refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => { setRefreshing(true); load(); }} tintColor={colors.accent} />}
       showsVerticalScrollIndicator={false}
     >
-      <ScreenHeader title="Sesiones" subtitle="Seguimiento de clases, créditos y confirmaciones" />
+      <ScreenHeader title="Sessions" subtitle="Track classes, credits, and confirmations" />
 
       <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.filters}>
         {FILTERS.map((item) => (
           <TouchableOpacity key={item} style={[styles.filter, filter === item && styles.filterActive]} onPress={() => setFilter(item)}>
-            <Text style={[styles.filterText, filter === item && styles.filterTextActive]}>{item === 'ALL' ? 'Todo' : statusLabel(item)}</Text>
+            <Text style={[styles.filterText, filter === item && styles.filterTextActive]}>{item === 'ALL' ? 'All' : statusLabel(item)}</Text>
           </TouchableOpacity>
         ))}
       </ScrollView>
 
       {filtered.length === 0 ? (
-        <EmptyState icon={Calendar} title="Sin sesiones" subtitle="Acepta un intercambio y agenda una sesión para empezar." />
+        <EmptyState icon={Calendar} title="No sessions" subtitle="Accept an exchange and schedule a session to get started." />
       ) : (
         <View style={styles.list}>
           {filtered.map((session) => {
@@ -159,7 +159,7 @@ export default function SessionsScreen() {
 
                 <View style={styles.infoRow}>
                   <Clock size={15} color={colors.accent} />
-                  <Text style={styles.infoText}>{formatDate(session.scheduledAt)} · {session.creditsAmount} crédito(s)</Text>
+                  <Text style={styles.infoText}>{formatDate(session.scheduledAt)} · {session.creditsAmount} credit(s)</Text>
                 </View>
 
                 <Text style={styles.people}>Teacher: {session.teacherName}</Text>
@@ -168,13 +168,13 @@ export default function SessionsScreen() {
                 <View style={styles.actions}>
                   {isPendingForMe ? (
                     <>
-                      <Button label="Aceptar" icon={CheckCircle2} onPress={() => accept(session.id)} />
-                      <Button label="Rechazar" icon={XCircle} variant="danger" onPress={() => reject(session.id)} />
+                      <Button label="Accept" icon={CheckCircle2} onPress={() => accept(session.id)} />
+                      <Button label="Reject" icon={XCircle} variant="danger" onPress={() => reject(session.id)} />
                     </>
                   ) : null}
-                  {canConfirm ? <Button label="Confirmar asistencia" icon={CheckCircle2} onPress={() => confirm(session.id)} /> : null}
-                  {canReview ? <Button label="Reseñar" icon={Star} variant="secondary" onPress={() => openReview(session)} /> : null}
-                  {session.status !== 'COMPLETED' && session.status !== 'CANCELLED' ? <Button label="Cancelar" variant="danger" onPress={() => cancel(session.id)} /> : null}
+                  {canConfirm ? <Button label="Confirm attendance" icon={CheckCircle2} onPress={() => confirm(session.id)} /> : null}
+                  {canReview ? <Button label="Review" icon={Star} variant="secondary" onPress={() => openReview(session)} /> : null}
+                  {session.status !== 'COMPLETED' && session.status !== 'CANCELLED' ? <Button label="Cancel" variant="danger" onPress={() => cancel(session.id)} /> : null}
                 </View>
               </Card>
             );
@@ -185,10 +185,10 @@ export default function SessionsScreen() {
       <Modal visible={!!reviewSession} transparent animationType="fade" onRequestClose={() => setReviewSession(null)}>
         <View style={styles.modalBackdrop}>
           <Card style={styles.modalCard}>
-            <Text style={styles.modalTitle}>Calificar experiencia</Text>
+            <Text style={styles.modalTitle}>Rate experience</Text>
             <Text style={styles.modalSubtitle}>{reviewSession?.topic}</Text>
 
-            <Text style={styles.inputLabel}>Puntaje</Text>
+            <Text style={styles.inputLabel}>Score</Text>
             <View style={styles.starsRow}>
               {[1, 2, 3, 4, 5].map((value) => (
                 <TouchableOpacity key={value} onPress={() => setRating(value)} style={styles.starButton}>
@@ -197,19 +197,19 @@ export default function SessionsScreen() {
               ))}
             </View>
 
-            <Text style={styles.inputLabel}>Comentario opcional</Text>
+            <Text style={styles.inputLabel}>Optional comment</Text>
             <TextInput
               value={comment}
               onChangeText={setComment}
               multiline
               style={[styles.input, styles.commentInput]}
-              placeholder="Cuenta cómo fue el intercambio..."
+              placeholder="Tell us how the exchange went..."
               placeholderTextColor="#64748b"
             />
 
             <View style={styles.modalActions}>
-              <Button label="Cancelar" variant="secondary" onPress={() => setReviewSession(null)} disabled={reviewing} />
-              <Button label="Enviar reseña" onPress={submitReview} loading={reviewing} />
+              <Button label="Cancel" variant="secondary" onPress={() => setReviewSession(null)} disabled={reviewing} />
+              <Button label="Send review" onPress={submitReview} loading={reviewing} />
             </View>
           </Card>
         </View>

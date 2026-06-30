@@ -13,7 +13,7 @@ export default function SignInScreen() {
 
   const handleLogin = async () => {
     if (!email.trim() || !password.trim()) {
-      Alert.alert('Campos obligatorios', 'Ingresa tu correo y contraseña.');
+      Alert.alert('Required fields', 'Enter your email and password.');
       return;
     }
 
@@ -21,7 +21,7 @@ export default function SignInScreen() {
     try {
       await login({ email: email.trim(), password });
     } catch (error) {
-      Alert.alert('No se pudo iniciar sesión', readableError(error, 'Revisa tus credenciales e inténtalo nuevamente.'));
+      Alert.alert('Could not sign in', readableError(error, 'Check your credentials and try again.'));
     } finally {
       setSubmitting(false);
     }
@@ -32,14 +32,14 @@ export default function SignInScreen() {
       <ScrollView contentContainerStyle={styles.container} keyboardShouldPersistTaps="handled">
         <View style={styles.brand}>
           <Text style={styles.logo}>OnlySwapX</Text>
-          <Text style={styles.subtitle}>Intercambia habilidades dentro de tu campus</Text>
+          <Text style={styles.subtitle}>Exchange skills within your campus</Text>
         </View>
 
         <View style={styles.form}>
-          <Text style={styles.label}>Correo electrónico</Text>
+          <Text style={styles.label}>Email</Text>
           <TextInput
             style={styles.input}
-            placeholder="alumno@utec.edu.pe"
+            placeholder="student@utec.edu.pe"
             placeholderTextColor="#64748b"
             value={email}
             autoCapitalize="none"
@@ -47,10 +47,10 @@ export default function SignInScreen() {
             onChangeText={setEmail}
           />
 
-          <Text style={styles.label}>Contraseña</Text>
+          <Text style={styles.label}>Password</Text>
           <TextInput
             style={styles.input}
-            placeholder="Tu contraseña"
+            placeholder="Your password"
             placeholderTextColor="#64748b"
             value={password}
             autoCapitalize="none"
@@ -59,12 +59,12 @@ export default function SignInScreen() {
           />
 
           <TouchableOpacity activeOpacity={0.85} style={[styles.primaryButton, submitting && styles.disabled]} onPress={handleLogin} disabled={submitting}>
-            {submitting ? <ActivityIndicator color={colors.background} /> : <Text style={styles.primaryText}>Iniciar sesión</Text>}
+            {submitting ? <ActivityIndicator color={colors.background} /> : <Text style={styles.primaryText}>Sign in</Text>}
           </TouchableOpacity>
 
           <View style={styles.footer}>
-            <Text style={styles.footerText}>¿Nuevo en OnlySwapX?</Text>
-            <Link href="/(auth)/sign-up" style={styles.link}>Crear cuenta</Link>
+            <Text style={styles.footerText}>New to OnlySwapX?</Text>
+            <Link href="/(auth)/sign-up" style={styles.link}>Create account</Link>
           </View>
         </View>
       </ScrollView>

@@ -26,7 +26,7 @@ export default function TabLayout() {
       <Tabs.Screen
         name="index"
         options={{
-          title: 'Descubrir',
+          title: 'Discover',
           tabBarIcon: ({ color }) => <Compass size={23} color={color} />,
         }}
       />
@@ -40,21 +40,21 @@ export default function TabLayout() {
       <Tabs.Screen
         name="exchanges"
         options={{
-          title: 'Intercambios',
+          title: 'Exchanges',
           tabBarIcon: ({ color }) => <ArrowLeftRight size={23} color={color} />,
         }}
       />
       <Tabs.Screen
         name="sessions"
         options={{
-          title: 'Sesiones',
+          title: 'Sessions',
           tabBarIcon: ({ color }) => <Calendar size={23} color={color} />,
         }}
       />
       <Tabs.Screen
         name="profile"
         options={{
-          title: 'Perfil',
+          title: 'Profile',
           tabBarIcon: ({ color }) => <User size={23} color={color} />,
         }}
       />

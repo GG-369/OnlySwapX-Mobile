@@ -9,9 +9,9 @@ import { readableError } from '@/utils/format';
 
 const CATEGORIES = ['TECNOLOGIA', 'CIENCIAS', 'HUMANIDADES', 'ARTE', 'IDIOMAS', 'NEGOCIOS', 'OTRO'];
 const LEVELS = [
-  { label: 'Básico', value: 'BEGINNER' },
-  { label: 'Intermedio', value: 'INTERMEDIATE' },
-  { label: 'Avanzado', value: 'ADVANCED' },
+  { label: 'Beginner', value: 'BEGINNER' },
+  { label: 'Intermediate', value: 'INTERMEDIATE' },
+  { label: 'Advanced', value: 'ADVANCED' },
 ] as const;
 
 const normalizeLevel = (value?: string) => {
@@ -40,7 +40,7 @@ export default function SkillsScreen() {
     try {
       setSkills(await skillService.getMySkills());
     } catch (error) {
-      Alert.alert('No se pudieron cargar tus skills', readableError(error, 'Intenta nuevamente.'));
+      Alert.alert('Could not load your skills', readableError(error, 'Try again.'));
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -62,17 +62,17 @@ export default function SkillsScreen() {
   };
 
   const remove = (skill: SkillSummaryResponse) => {
-    Alert.alert('Eliminar skill', `¿Eliminar "${skill.name}"?`, [
-      { text: 'Cancelar', style: 'cancel' },
+    Alert.alert('Delete skill', `Delete "${skill.name}"?`, [
+      { text: 'Cancel', style: 'cancel' },
       {
-        text: 'Eliminar',
+        text: 'Delete',
         style: 'destructive',
         onPress: async () => {
           try {
             await skillService.delete(skill.id);
             load();
           } catch (error) {
-            Alert.alert('No se pudo eliminar', readableError(error, 'Intenta nuevamente.'));
+            Alert.alert('Could not delete', readableError(error, 'Try again.'));
           }
         },
       },
@@ -90,12 +90,12 @@ export default function SkillsScreen() {
       >
         <ScreenHeader
           title="My Skills"
-          subtitle="Administra lo que enseñas y quieres aprender"
-          right={<Button label="Nuevo" icon={Plus} onPress={openCreate} />}
+          subtitle="Manage what you teach and want to learn"
+          right={<Button label="New" icon={Plus} onPress={openCreate} />}
         />
 
         {skills.length === 0 ? (
-          <EmptyState icon={Target} title="Aún no tienes skills" subtitle="Agrega una habilidad ofrecida o buscada para activar matches." action={<Button label="Agregar skill" icon={Plus} onPress={openCreate} />} />
+          <EmptyState icon={Target} title="You don't have any skills yet" subtitle="Add an offered or wanted skill to activate matches." action={<Button label="Add skill" icon={Plus} onPress={openCreate} />} />
         ) : (
           <View style={styles.list}>
             {skills.map((skill) => (
@@ -136,7 +136,7 @@ function SkillFormModal({ visible, initialData, onClose, onSaved }: { visible: b
 
   const save = async () => {
     if (!name.trim()) {
-      Alert.alert('Nombre requerido', 'Escribe el nombre de la habilidad.');
+      Alert.alert('Name required', 'Enter the skill name.');
       return;
     }
 
@@ -159,7 +159,7 @@ function SkillFormModal({ visible, initialData, onClose, onSaved }: { visible: b
       }
       onSaved();
     } catch (error) {
-      Alert.alert('No se pudo guardar', readableError(error, 'Intenta nuevamente.'));
+      Alert.alert('Could not save', readableError(error, 'Try again.'));
     } finally {
       setSubmitting(false);
     }
@@ -169,29 +169,29 @@ function SkillFormModal({ visible, initialData, onClose, onSaved }: { visible: b
     <Modal visible={visible} animationType="slide" presentationStyle="pageSheet" onRequestClose={onClose}>
       <ScrollView style={styles.modalScreen} contentContainerStyle={styles.modalContent}>
         <View style={styles.modalHeader}>
-          <Text style={styles.modalTitle}>{initialData ? 'Editar skill' : 'Nuevo skill'}</Text>
+          <Text style={styles.modalTitle}>{initialData ? 'Edit skill' : 'New skill'}</Text>
           <TouchableOpacity onPress={onClose} style={styles.closeButton}>
             <X size={20} color={colors.text} />
           </TouchableOpacity>
         </View>
 
         <Card style={styles.formCard}>
-          <Text style={styles.label}>Tipo</Text>
+          <Text style={styles.label}>Type</Text>
           <View style={styles.segment}>
             {(['OFFER', 'WANT'] as const).map((type) => (
               <TouchableOpacity key={type} style={[styles.segmentItem, skillType === type && styles.segmentActive]} onPress={() => setSkillType(type)}>
-                <Text style={[styles.segmentText, skillType === type && styles.segmentTextActive]}>{type === 'OFFER' ? 'Ofrezco' : 'Busco'}</Text>
+                <Text style={[styles.segmentText, skillType === type && styles.segmentTextActive]}>{type === 'OFFER' ? 'I offer' : 'Looking for'}</Text>
               </TouchableOpacity>
             ))}
           </View>
 
-          <Text style={styles.label}>Nombre</Text>
-          <TextInput value={name} onChangeText={setName} style={styles.input} placeholder="Python, Cálculo, Inglés..." placeholderTextColor="#64748b" />
+          <Text style={styles.label}>Name</Text>
+          <TextInput value={name} onChangeText={setName} style={styles.input} placeholder="Python, Calculus, English..." placeholderTextColor="#64748b" />
 
-          <Text style={styles.label}>Descripción</Text>
-          <TextInput value={description} onChangeText={setDescription} style={[styles.input, styles.textArea]} multiline placeholder="Explica qué puedes enseñar o qué necesitas aprender" placeholderTextColor="#64748b" />
+          <Text style={styles.label}>Description</Text>
+          <TextInput value={description} onChangeText={setDescription} style={[styles.input, styles.textArea]} multiline placeholder="Explain what you can teach or what you need to learn" placeholderTextColor="#64748b" />
 
-          <Text style={styles.label}>Categoría</Text>
+          <Text style={styles.label}>Category</Text>
           <View style={styles.wrap}>
             {CATEGORIES.map((item) => (
               <TouchableOpacity key={item} style={[styles.chip, category === item && styles.chipActive]} onPress={() => setCategory(item)}>
@@ -200,7 +200,7 @@ function SkillFormModal({ visible, initialData, onClose, onSaved }: { visible: b
             ))}
           </View>
 
-          <Text style={styles.label}>Nivel</Text>
+          <Text style={styles.label}>Level</Text>
           <View style={styles.wrap}>
             {LEVELS.map((item) => (
               <TouchableOpacity key={item.value} style={[styles.chip, level === item.value && styles.chipActive]} onPress={() => setLevel(item.value)}>
@@ -209,7 +209,7 @@ function SkillFormModal({ visible, initialData, onClose, onSaved }: { visible: b
             ))}
           </View>
 
-          <Button label={initialData ? 'Guardar cambios' : 'Crear skill'} onPress={save} loading={submitting} />
+          <Button label={initialData ? 'Save changes' : 'Create skill'} onPress={save} loading={submitting} />
         </Card>
       </ScrollView>
     </Modal>
