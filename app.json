@@ -1,0 +1,72 @@
+{
+  "expo": {
+    "name": "OnlySwapX-Mobile",
+    "slug": "OnlySwapX-Mobile",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/images/icon.png",
+    "scheme": "onlyswapxmobile",
+    "userInterfaceStyle": "automatic",
+    "newArchEnabled": true,
+    "ios": {
+      "supportsTablet": true,
+      "infoPlist": {
+        "NSCameraUsageDescription": "OnlySwapX usa la cámara para actualizar tu foto de perfil y documentos de verificación.",
+        "NSPhotoLibraryUsageDescription": "OnlySwapX usa tu galería para seleccionar fotos de perfil y documentos de verificación.",
+        "NSLocationWhenInUseUsageDescription": "OnlySwapX usa tu ubicación para priorizar personas cercanas dentro del campus."
+      }
+    },
+    "android": {
+      "adaptiveIcon": {
+        "backgroundColor": "#E6F4FE",
+        "foregroundImage": "./assets/images/android-icon-foreground.png",
+        "backgroundImage": "./assets/images/android-icon-background.png",
+        "monochromeImage": "./assets/images/android-icon-monochrome.png"
+      },
+      "edgeToEdgeEnabled": true,
+      "predictiveBackGestureEnabled": false,
+      "permissions": [
+        "CAMERA",
+        "READ_MEDIA_IMAGES",
+        "ACCESS_FINE_LOCATION"
+      ]
+    },
+    "web": {
+      "output": "static",
+      "favicon": "./assets/images/favicon.png"
+    },
+    "plugins": [
+      "expo-router",
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "OnlySwapX usa tu galería para seleccionar fotos de perfil y documentos de verificación.",
+          "cameraPermission": "OnlySwapX usa la cámara para actualizar tu foto de perfil y documentos de verificación."
+        }
+      ],
+      [
+        "expo-location",
+        {
+          "locationAlwaysAndWhenInUsePermission": "OnlySwapX usa tu ubicación para priorizar personas cercanas dentro del campus."
+        }
+      ],
+      [
+        "expo-splash-screen",
+        {
+          "image": "./assets/images/splash-icon.png",
+          "imageWidth": 200,
+          "resizeMode": "contain",
+          "backgroundColor": "#ffffff",
+          "dark": {
+            "backgroundColor": "#000000"
+          }
+        }
+      ],
+      "expo-secure-store"
+    ],
+    "experiments": {
+      "typedRoutes": true,
+      "reactCompiler": true
+    }
+  }
+}
