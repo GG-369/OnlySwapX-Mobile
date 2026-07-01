@@ -10,7 +10,7 @@ import { Badge, Button, Card, EmptyState, LoadingState, ScreenHeader, colors } f
 import { SkillItem } from '@/components/SkillItem';
 import { useDeviceLocation } from '@/hooks/useDeviceLocation';
 import { campusFromUniversity, distanceInMeters } from '@/utils/location';
-import { formatDistance, readableError } from '@/utils/format';
+import { categoryLabel, formatDistance, readableError } from '@/utils/format';
 
 const CATEGORIES = ['TECNOLOGIA', 'CIENCIAS', 'HUMANIDADES', 'ARTE', 'IDIOMAS', 'NEGOCIOS', 'OTRO'];
 
@@ -168,10 +168,10 @@ export default function DiscoverScreen() {
           <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.suggestedRow}>
             {suggested.slice(0, 6).map((item) => (
               <Card key={item.skillId} style={styles.suggestedCard}>
-                <Text style={styles.suggestedScore}>{Math.round(item.score * 100)}%</Text>
+                <Text style={styles.suggestedScore}>{Math.round(item.score)}%</Text>
                 <Text style={styles.suggestedName} numberOfLines={2}>{item.skillName}</Text>
                 <Text style={styles.suggestedOwner} numberOfLines={1}>{item.ownerName}</Text>
-                <Badge>{item.category || 'Skill'}</Badge>
+                <Badge>{categoryLabel(item.category)}</Badge>
               </Card>
             ))}
           </ScrollView>
@@ -196,7 +196,7 @@ export default function DiscoverScreen() {
         </TouchableOpacity>
         {CATEGORIES.map((item) => (
           <TouchableOpacity key={item} style={[styles.filterChip, category === item && styles.filterActive]} onPress={() => { setCategory(item); setPage(0); }}>
-            <Text style={[styles.filterText, category === item && styles.filterTextActive]}>{item}</Text>
+            <Text style={[styles.filterText, category === item && styles.filterTextActive]}>{categoryLabel(item)}</Text>
           </TouchableOpacity>
         ))}
       </ScrollView>

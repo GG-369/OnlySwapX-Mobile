@@ -11,9 +11,9 @@
     "ios": {
       "supportsTablet": true,
       "infoPlist": {
-        "NSCameraUsageDescription": "OnlySwapX usa la cámara para actualizar tu foto de perfil y documentos de verificación.",
-        "NSPhotoLibraryUsageDescription": "OnlySwapX usa tu galería para seleccionar fotos de perfil y documentos de verificación.",
-        "NSLocationWhenInUseUsageDescription": "OnlySwapX usa tu ubicación para priorizar personas cercanas dentro del campus."
+        "NSCameraUsageDescription": "OnlySwapX uses the camera to update your profile photo.",
+        "NSPhotoLibraryUsageDescription": "OnlySwapX uses your gallery to select a profile photo.",
+        "NSLocationWhenInUseUsageDescription": "OnlySwapX uses your location to prioritize nearby people on campus."
       }
     },
     "android": {
@@ -40,14 +40,14 @@
       [
         "expo-image-picker",
         {
-          "photosPermission": "OnlySwapX usa tu galería para seleccionar fotos de perfil y documentos de verificación.",
-          "cameraPermission": "OnlySwapX usa la cámara para actualizar tu foto de perfil y documentos de verificación."
+          "photosPermission": "OnlySwapX uses your gallery to select a profile photo.",
+          "cameraPermission": "OnlySwapX uses the camera to update your profile photo."
         }
       ],
       [
         "expo-location",
         {
-          "locationAlwaysAndWhenInUsePermission": "OnlySwapX usa tu ubicación para priorizar personas cercanas dentro del campus."
+          "locationAlwaysAndWhenInUsePermission": "OnlySwapX uses your location to prioritize nearby people on campus."
         }
       ],
       [

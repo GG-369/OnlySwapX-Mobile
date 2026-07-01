@@ -119,7 +119,7 @@ export default function SessionsScreen() {
         comment: comment.trim() || undefined,
       });
       setReviewSession(null);
-      load();
+      await load();
     } catch (error) {
       Alert.alert('Could not create review', readableError(error, 'Try again.'));
     } finally {

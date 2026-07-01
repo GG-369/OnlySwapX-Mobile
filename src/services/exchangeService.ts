@@ -1,5 +1,5 @@
 import apiClient from './apiClient';
-import type { ExchangeCreateRequest, ExchangeDetailResponse, ExchangeSummaryResponse } from '@/types';
+import type { ExchangeCreateRequest, ExchangeDetailResponse, ExchangeSummaryResponse, PageResponse } from '@/types';
 
 interface ExchangeCheckResult {
   exists: boolean;
@@ -12,7 +12,9 @@ export const exchangeService = {
     apiClient.post<ExchangeDetailResponse>('/api/v1/exchanges', data).then((r) => r.data),
 
   getMyExchanges: () =>
-    apiClient.get<ExchangeSummaryResponse[]>('/api/v1/exchanges').then((r) => r.data),
+    apiClient
+      .get<PageResponse<ExchangeSummaryResponse>>('/api/v1/exchanges', { params: { size: 100 } })
+      .then((r) => r.data.content ?? []),
 
   getById: (id: number) =>
     apiClient.get<ExchangeDetailResponse>(`/api/v1/exchanges/${id}`).then((r) => r.data),
